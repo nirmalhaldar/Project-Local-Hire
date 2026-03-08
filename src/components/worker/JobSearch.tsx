@@ -50,11 +50,19 @@ export default function JobSearch() {
   const [reportJobId, setReportJobId] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState("");
   const [reportDesc, setReportDesc] = useState("");
+  const [recommendedIds, setRecommendedIds] = useState<string[]>([]);
+  const [highPayingIds, setHighPayingIds] = useState<string[]>([]);
+  const [loadingRecs, setLoadingRecs] = useState(false);
+  const [activeTab, setActiveTab] = useState<"all" | "recommended" | "highpaying">("all");
 
   useEffect(() => {
     fetchJobs();
     if (user) { fetchSavedJobs(); fetchAppliedJobs(); }
   }, [user]);
+
+  useEffect(() => {
+    if (user && jobs.length > 0) fetchRecommendations();
+  }, [user, jobs.length]);
 
   const fetchJobs = async () => {
     setLoading(true);
