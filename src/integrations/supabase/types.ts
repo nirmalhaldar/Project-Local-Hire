@@ -238,6 +238,9 @@ export type Database = {
           gig_wage_daily: number | null
           id: string
           is_verified: boolean | null
+          location_address: string | null
+          location_lat: number | null
+          location_lng: number | null
           phone: string | null
           roles: string[] | null
           updated_at: string
@@ -254,6 +257,9 @@ export type Database = {
           gig_wage_daily?: number | null
           id: string
           is_verified?: boolean | null
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
           phone?: string | null
           roles?: string[] | null
           updated_at?: string
@@ -270,6 +276,9 @@ export type Database = {
           gig_wage_daily?: number | null
           id?: string
           is_verified?: boolean | null
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
           phone?: string | null
           roles?: string[] | null
           updated_at?: string
