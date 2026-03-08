@@ -16,7 +16,7 @@ const Header = () => {
   const { user, userRole, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const dashboardPath = userRole === "employer" ? "/dashboard/employer" : "/dashboard/worker";
+  const dashboardPath = userRole === "admin" ? "/dashboard/admin" : userRole === "employer" ? "/dashboard/employer" : "/dashboard/worker";
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
