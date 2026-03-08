@@ -1,4 +1,9 @@
 {
+  "extends": "@vercel/jest",
+  "jest": {
+    "testEnvironment": "jsdom"
+  }
+}
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
@@ -22,11 +27,9 @@
       ]
     },
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "target": "ES2020",
-    "types": [
-      "vitest/globals"
-    ],
+    "types": [],
     "useDefineForClassFields": true
   },
   "include": [
