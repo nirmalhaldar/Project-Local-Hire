@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Search, MapPin, DollarSign, List, Map, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, Loader2, Home } from "lucide-react";
+import { Search, MapPin, DollarSign, List, Map, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, Loader2, Home, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import JobMapView from "./JobMapView";
+import PlacesAutocomplete from "@/components/shared/PlacesAutocomplete";
 
 interface Job {
   id: string;
@@ -262,7 +263,32 @@ export default function JobSearch() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-            <Input placeholder="Search jobs, skills, locations..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+            <Input placeholder="Search jobs, skills..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="gap-1">
+              Filters <ChevronDown size={14} className={`transition ${showFilters ? "rotate-180" : ""}`} />
+            </Button>
+            <div className="flex gap-1 border border-border rounded-lg p-1">
+              <Button variant={viewMode === "list" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("list")}><List size={16} /></Button>
+              <Button variant={viewMode === "map" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("map")}><Map size={16} /></Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Location Search */}
+        <div className="flex flex-col sm:flex-row gap-3 items-start">
+          <div className="flex-1 w-full">
+            <PlacesAutocomplete
+              value={userLocation ? (locationSource === "home" ? (homeLocation?.address || "") : "Current GPS location") : ""}
+              onChange={(address, lat, lng) => {
+                if (lat && lng) {
+                  setUserLocation({ lat, lng });
+                  setLocationSource(null);
+                }
+              }}
+              placeholder="Search location to find nearby jobs..."
+            />
           </div>
           <div className="flex gap-2 flex-wrap">
             <Button
@@ -282,16 +308,19 @@ export default function JobSearch() {
                 onClick={handleUseHomeLocation}
                 className="gap-1.5"
               >
-                <Home size={14} /> Home Location
+                <Home size={14} /> Home
               </Button>
             )}
-            <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="gap-1">
-              Filters <ChevronDown size={14} className={`transition ${showFilters ? "rotate-180" : ""}`} />
-            </Button>
-            <div className="flex gap-1 border border-border rounded-lg p-1">
-              <Button variant={viewMode === "list" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("list")}><List size={16} /></Button>
-              <Button variant={viewMode === "map" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("map")}><Map size={16} /></Button>
-            </div>
+            {userLocation && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setUserLocation(null); setLocationSource(null); }}
+                className="gap-1.5 text-muted-foreground"
+              >
+                <X size={14} /> Clear
+              </Button>
+            )}
           </div>
         </div>
 
