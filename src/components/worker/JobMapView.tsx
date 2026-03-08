@@ -122,6 +122,7 @@ export default function JobMapView({
       )}
 
       <MapContainer
+        key={`${center[0].toFixed(2)}-${center[1].toFixed(2)}-${zoom}`}
         center={center}
         zoom={zoom}
         style={{ height: "500px", width: "100%", borderRadius: "0.75rem" }}
