@@ -29,10 +29,8 @@ export function EmployerSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <div className="p-4 flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
-            <span className="text-primary-foreground font-bold text-lg">L</span>
-          </div>
-          {!collapsed && <span className="font-bold text-lg text-foreground">Local<span className="text-primary">Hire</span></span>}
+          <img src="/logo.png" alt="LocalHire" className="w-9 h-9 rounded-lg object-contain shrink-0" />
+          {!collapsed && <span className="font-bold text-xl text-foreground">Local<span className="text-primary">Hire</span></span>}
         </div>
         <SidebarGroup>
           <SidebarGroupLabel>Employer</SidebarGroupLabel>

@@ -85,10 +85,8 @@ const AuthPage = () => {
         <div className="bg-card rounded-2xl border border-border shadow-xl p-8">
           {/* Logo */}
           <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-display font-bold text-xl">L</span>
-            </div>
-            <span className="font-display font-bold text-2xl text-foreground">
+            <img src="/logo.png" alt="LocalHire" className="w-11 h-11 rounded-xl object-contain" />
+            <span className="font-display font-bold text-3xl text-foreground">
               Local<span className="text-primary">Hire</span>
             </span>
           </div>
