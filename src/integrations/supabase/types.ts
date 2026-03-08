@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      jobs: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          employer_id: string
+          id: string
+          location_address: string | null
+          location_lat: number | null
+          location_lng: number | null
+          pay_max: number | null
+          pay_min: number | null
+          pay_type: string | null
+          skills_required: string[] | null
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          employer_id: string
+          id?: string
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          pay_max?: number | null
+          pay_min?: number | null
+          pay_type?: string | null
+          skills_required?: string[] | null
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          employer_id?: string
+          id?: string
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          pay_max?: number | null
+          pay_min?: number | null
+          pay_type?: string | null
+          skills_required?: string[] | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -61,6 +115,87 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      worker_availability: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string | null
+          id: string
+          is_available: boolean | null
+          start_time: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time?: string | null
+          id?: string
+          is_available?: boolean | null
+          start_time?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string | null
+          id?: string
+          is_available?: boolean | null
+          start_time?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      worker_portfolio: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      worker_skills: {
+        Row: {
+          created_at: string
+          experience_years: number | null
+          id: string
+          skill: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          experience_years?: number | null
+          id?: string
+          skill: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          experience_years?: number | null
+          id?: string
+          skill?: string
           user_id?: string
         }
         Relationships: []
