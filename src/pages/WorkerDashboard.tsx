@@ -6,6 +6,8 @@ import JobSearch from "@/components/worker/JobSearch";
 import WorkerProfile from "@/components/worker/WorkerProfile";
 import WorkerAvailability from "@/components/worker/WorkerAvailability";
 import WorkerPortfolio from "@/components/worker/WorkerPortfolio";
+import WorkerAnalytics from "@/components/worker/WorkerAnalytics";
+import WorkerMessages from "@/components/worker/WorkerMessages";
 
 const WorkerDashboard = () => {
   const { user, loading, userRole } = useAuth();
@@ -36,6 +38,8 @@ const WorkerDashboard = () => {
               <Route path="profile" element={<WorkerProfile />} />
               <Route path="availability" element={<WorkerAvailability />} />
               <Route path="portfolio" element={<WorkerPortfolio />} />
+              <Route path="analytics" element={<WorkerAnalytics />} />
+              <Route path="messages" element={<WorkerMessages />} />
             </Routes>
           </main>
         </div>
