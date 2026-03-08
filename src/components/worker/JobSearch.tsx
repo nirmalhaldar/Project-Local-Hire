@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Search, MapPin, DollarSign, List, Map, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, Loader2 } from "lucide-react";
+import { Search, MapPin, DollarSign, List, Map, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, Loader2, Home } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,6 +56,8 @@ export default function JobSearch() {
   const [loadingRecs, setLoadingRecs] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "recommended" | "highpaying">("all");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [homeLocation, setHomeLocation] = useState<{ lat: number; lng: number; address: string | null } | null>(null);
+  const [locationSource, setLocationSource] = useState<"gps" | "home" | null>(null);
   const [locatingUser, setLocatingUser] = useState(false);
   const [radiusKm, setRadiusKm] = useState(25);
 
@@ -67,6 +69,13 @@ export default function JobSearch() {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }, []);
 
+  const handleUseHomeLocation = useCallback(() => {
+    if (!homeLocation) return;
+    setUserLocation({ lat: homeLocation.lat, lng: homeLocation.lng });
+    setLocationSource("home");
+    toast({ title: "Using home location", description: homeLocation.address || "Showing jobs near your saved home." });
+  }, [homeLocation]);
+
   const handleRequestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       toast({ title: "Not supported", description: "Geolocation is not supported by your browser.", variant: "destructive" });
@@ -76,16 +85,23 @@ export default function JobSearch() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocationSource("gps");
         setLocatingUser(false);
-        toast({ title: "Location found!", description: "Showing jobs near your location." });
+        toast({ title: "GPS location found", description: "Showing jobs near your current location." });
       },
       (err) => {
         setLocatingUser(false);
+        if (homeLocation) {
+          setUserLocation({ lat: homeLocation.lat, lng: homeLocation.lng });
+          setLocationSource("home");
+          toast({ title: "Using home location", description: "GPS failed, so we switched to your saved home location." });
+          return;
+        }
         toast({ title: "Location error", description: err.message, variant: "destructive" });
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, []);
+  }, [homeLocation]);
 
   const getJobDistance = useCallback((job: Job) => {
     if (!userLocation || !job.location_lat || !job.location_lng) return null;
@@ -94,7 +110,7 @@ export default function JobSearch() {
 
   useEffect(() => {
     fetchJobs();
-    if (user) { fetchSavedJobs(); fetchAppliedJobs(); }
+    if (user) { fetchSavedJobs(); fetchAppliedJobs(); fetchHomeLocation(); }
   }, [user]);
 
   useEffect(() => {
@@ -116,6 +132,25 @@ export default function JobSearch() {
   const fetchAppliedJobs = async () => {
     const { data } = await supabase.from("job_applications").select("job_id").eq("worker_id", user!.id);
     if (data) setAppliedJobIds(new Set(data.map((d) => d.job_id)));
+  };
+
+  const fetchHomeLocation = async () => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("location_address, location_lat, location_lng")
+      .eq("id", user!.id)
+      .single();
+
+    if (data?.location_lat && data?.location_lng) {
+      const nextHome = {
+        lat: data.location_lat,
+        lng: data.location_lng,
+        address: data.location_address,
+      };
+      setHomeLocation(nextHome);
+      setUserLocation((prev) => prev ?? { lat: nextHome.lat, lng: nextHome.lng });
+      setLocationSource((prev) => prev ?? "home");
+    }
   };
 
   const fetchRecommendations = async () => {
