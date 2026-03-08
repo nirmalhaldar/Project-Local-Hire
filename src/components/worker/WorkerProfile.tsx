@@ -208,6 +208,19 @@ export default function WorkerProfile() {
             <label className="text-sm font-medium text-foreground mb-1.5 block">Bio</label>
             <Textarea value={profile.bio || ""} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} placeholder="Tell employers about yourself..." rows={3} />
           </div>
+          <div>
+            <label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5"><MapPin size={14} /> Home Location</label>
+            <PlacesAutocomplete
+              value={profile.location_address || ""}
+              onChange={(address, lat, lng) => setProfile({ ...profile, location_address: address, location_lat: lat, location_lng: lng })}
+              placeholder="Search your area, e.g., Sector 62, Noida"
+            />
+            {profile.location_lat && profile.location_lng && (
+              <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
+                <MapPin size={10} /> {profile.location_lat.toFixed(4)}, {profile.location_lng.toFixed(4)}
+              </p>
+            )}
+          </div>
         </div>
       </Card>
 
