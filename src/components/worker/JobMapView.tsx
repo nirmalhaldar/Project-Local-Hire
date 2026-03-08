@@ -57,8 +57,14 @@ interface JobMapViewProps {
 function RecenterMap({ center, zoom }: { center: [number, number]; zoom: number }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, zoom);
-  }, [center[0], center[1], zoom]);
+    map.setView(center, zoom, { animate: true });
+  }, [map, center[0], center[1], zoom]);
+  
+  // Also set on mount to ensure correct initial position
+  useEffect(() => {
+    setTimeout(() => map.invalidateSize(), 100);
+  }, [map]);
+  
   return null;
 }
 
@@ -116,6 +122,7 @@ export default function JobMapView({
       )}
 
       <MapContainer
+        key={`${center[0].toFixed(2)}-${center[1].toFixed(2)}-${zoom}`}
         center={center}
         zoom={zoom}
         style={{ height: "500px", width: "100%", borderRadius: "0.75rem" }}
