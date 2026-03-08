@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
@@ -7,9 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Search, MapPin, DollarSign, List, Map, Clock, Briefcase, Heart, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp } from "lucide-react";
+import { Search, MapPin, DollarSign, List, Map, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import JobMapView from "./JobMapView";
 
@@ -55,6 +55,42 @@ export default function JobSearch() {
   const [highPayingIds, setHighPayingIds] = useState<string[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "recommended" | "highpaying">("all");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locatingUser, setLocatingUser] = useState(false);
+  const [radiusKm, setRadiusKm] = useState(25);
+
+  const getDistanceKm = useCallback((lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }, []);
+
+  const handleRequestLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      toast({ title: "Not supported", description: "Geolocation is not supported by your browser.", variant: "destructive" });
+      return;
+    }
+    setLocatingUser(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocatingUser(false);
+        toast({ title: "Location found!", description: "Showing jobs near your location." });
+      },
+      (err) => {
+        setLocatingUser(false);
+        toast({ title: "Location error", description: err.message, variant: "destructive" });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
+  const getJobDistance = useCallback((job: Job) => {
+    if (!userLocation || !job.location_lat || !job.location_lng) return null;
+    return getDistanceKm(userLocation.lat, userLocation.lng, job.location_lat, job.location_lng);
+  }, [userLocation, getDistanceKm]);
 
   useEffect(() => {
     fetchJobs();
