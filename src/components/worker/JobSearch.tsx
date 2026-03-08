@@ -7,11 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Search, MapPin, DollarSign, List, Map, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, Loader2, Home, X } from "lucide-react";
+import { Search, MapPin, DollarSign, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import JobMapView from "./JobMapView";
+
 import PlacesAutocomplete from "@/components/shared/PlacesAutocomplete";
 
 interface Job {
@@ -45,7 +45,7 @@ export default function JobSearch() {
   const [jobType, setJobType] = useState("all");
   const [role, setRole] = useState("All Roles");
   const [salaryRange, setSalaryRange] = useState([0, 50000]);
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  
   const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
@@ -58,8 +58,7 @@ export default function JobSearch() {
   const [activeTab, setActiveTab] = useState<"all" | "recommended" | "highpaying">("all");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [homeLocation, setHomeLocation] = useState<{ lat: number; lng: number; address: string | null } | null>(null);
-  const [locationSource, setLocationSource] = useState<"gps" | "home" | null>(null);
-  const [locatingUser, setLocatingUser] = useState(false);
+  
   const [radiusKm, setRadiusKm] = useState(25);
 
   const getDistanceKm = useCallback((lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -70,39 +69,6 @@ export default function JobSearch() {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }, []);
 
-  const handleUseHomeLocation = useCallback(() => {
-    if (!homeLocation) return;
-    setUserLocation({ lat: homeLocation.lat, lng: homeLocation.lng });
-    setLocationSource("home");
-    toast({ title: "Using home location", description: homeLocation.address || "Showing jobs near your saved home." });
-  }, [homeLocation]);
-
-  const handleRequestLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      toast({ title: "Not supported", description: "Geolocation is not supported by your browser.", variant: "destructive" });
-      return;
-    }
-    setLocatingUser(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setLocationSource("gps");
-        setLocatingUser(false);
-        toast({ title: "GPS location found", description: "Showing jobs near your current location." });
-      },
-      (err) => {
-        setLocatingUser(false);
-        if (homeLocation) {
-          setUserLocation({ lat: homeLocation.lat, lng: homeLocation.lng });
-          setLocationSource("home");
-          toast({ title: "Using home location", description: "GPS failed, so we switched to your saved home location." });
-          return;
-        }
-        toast({ title: "Location error", description: err.message, variant: "destructive" });
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  }, [homeLocation]);
 
   const getJobDistance = useCallback((job: Job) => {
     if (!userLocation || !job.location_lat || !job.location_lng) return null;
@@ -150,7 +116,6 @@ export default function JobSearch() {
       };
       setHomeLocation(nextHome);
       setUserLocation((prev) => prev ?? { lat: nextHome.lat, lng: nextHome.lng });
-      setLocationSource((prev) => prev ?? "home");
     }
   };
 
@@ -265,63 +230,34 @@ export default function JobSearch() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
             <Input placeholder="Search jobs, skills..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="gap-1">
-              Filters <ChevronDown size={14} className={`transition ${showFilters ? "rotate-180" : ""}`} />
-            </Button>
-            <div className="flex gap-1 border border-border rounded-lg p-1">
-              <Button variant={viewMode === "list" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("list")}><List size={16} /></Button>
-              <Button variant={viewMode === "map" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("map")}><Map size={16} /></Button>
-            </div>
-          </div>
+          <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="gap-1">
+            Filters <ChevronDown size={14} className={`transition ${showFilters ? "rotate-180" : ""}`} />
+          </Button>
         </div>
 
         {/* Location Search */}
         <div className="flex flex-col sm:flex-row gap-3 items-start">
           <div className="flex-1 w-full">
             <PlacesAutocomplete
-              value={userLocation ? (locationSource === "home" ? (homeLocation?.address || "") : "Current GPS location") : ""}
+              value={userLocation ? (homeLocation?.address || "") : ""}
               onChange={(address, lat, lng) => {
                 if (lat && lng) {
                   setUserLocation({ lat, lng });
-                  setLocationSource(null);
                 }
               }}
               placeholder="Search location to find nearby jobs..."
             />
           </div>
-          <div className="flex gap-2 flex-wrap">
+          {userLocation && (
             <Button
-              variant={locationSource === "gps" ? "default" : "outline"}
+              variant="ghost"
               size="sm"
-              onClick={handleRequestLocation}
-              disabled={locatingUser}
-              className="gap-1.5"
+              onClick={() => setUserLocation(null)}
+              className="gap-1.5 text-muted-foreground"
             >
-              {locatingUser ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />}
-              {locatingUser ? "Locating..." : "Use GPS"}
+              <X size={14} /> Clear
             </Button>
-            {homeLocation && (
-              <Button
-                variant={locationSource === "home" ? "default" : "outline"}
-                size="sm"
-                onClick={handleUseHomeLocation}
-                className="gap-1.5"
-              >
-                <Home size={14} /> Home
-              </Button>
-            )}
-            {userLocation && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { setUserLocation(null); setLocationSource(null); }}
-                className="gap-1.5 text-muted-foreground"
-              >
-                <X size={14} /> Clear
-              </Button>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Extended Filters */}
@@ -382,7 +318,7 @@ export default function JobSearch() {
         <div className="grid gap-4 md:grid-cols-2">
           {[1, 2, 3, 4].map((i) => <Card key={i} className="p-5 animate-pulse"><div className="h-5 bg-muted rounded w-3/4 mb-3" /><div className="h-4 bg-muted rounded w-1/2 mb-2" /><div className="h-4 bg-muted rounded w-1/3" /></Card>)}
         </div>
-      ) : viewMode === "list" ? (
+      ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {filteredJobs.length === 0 ? (
             <div className="col-span-2 text-center py-16">
@@ -429,7 +365,6 @@ export default function JobSearch() {
                 </div>
               )}
 
-              {/* Quick Apply */}
               {appliedJobIds.has(job.id) ? (
                 <div className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
                   <Send size={14} /> Applied
@@ -442,22 +377,6 @@ export default function JobSearch() {
             </Card>
           ))}
         </div>
-      ) : (
-        <JobMapView
-          jobs={filteredJobs}
-          savedJobIds={savedJobIds}
-          appliedJobIds={appliedJobIds}
-          onApply={handleApply}
-          onToggleSave={handleToggleSave}
-          formatPay={formatPay}
-          userLocation={userLocation}
-          homeLocation={homeLocation ? { lat: homeLocation.lat, lng: homeLocation.lng } : null}
-          onUseHomeLocation={handleUseHomeLocation}
-          locationSource={locationSource}
-          onRequestLocation={handleRequestLocation}
-          locatingUser={locatingUser}
-          radiusKm={radiusKm}
-        />
       )}
 
       {/* Report Dialog */}
