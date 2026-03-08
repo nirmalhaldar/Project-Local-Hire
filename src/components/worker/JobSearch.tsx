@@ -81,6 +81,22 @@ export default function JobSearch() {
     if (data) setAppliedJobIds(new Set(data.map((d) => d.job_id)));
   };
 
+  const fetchRecommendations = async () => {
+    setLoadingRecs(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("job-recommendations", {
+        body: { userId: user!.id },
+      });
+      if (data && !error) {
+        setRecommendedIds(data.recommended || []);
+        setHighPayingIds(data.highPaying || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch recommendations:", e);
+    }
+    setLoadingRecs(false);
+  };
+
   const handleApply = async (jobId: string) => {
     const { error } = await supabase.from("job_applications").insert({ job_id: jobId, worker_id: user!.id });
     if (error) {
