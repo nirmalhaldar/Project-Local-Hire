@@ -42,8 +42,17 @@ const Header = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" size="sm">Log In</Button>
-          <Button variant="default" size="sm">Sign Up</Button>
+          {user ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/role-selection")}>Dashboard</Button>
+              <Button variant="outline" size="sm" onClick={signOut}><LogOut size={14} /> Sign Out</Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>Log In</Button>
+              <Button variant="default" size="sm" onClick={() => navigate("/auth")}>Sign Up</Button>
+            </>
+          )}
         </div>
 
         <button
@@ -75,8 +84,17 @@ const Header = () => {
                 </a>
               ))}
               <div className="flex gap-3 pt-2">
-                <Button variant="ghost" size="sm" className="flex-1">Log In</Button>
-                <Button variant="default" size="sm" className="flex-1">Sign Up</Button>
+                {user ? (
+                  <>
+                    <Button variant="ghost" size="sm" className="flex-1" onClick={() => { navigate("/role-selection"); setMobileOpen(false); }}>Dashboard</Button>
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => { signOut(); setMobileOpen(false); }}>Sign Out</Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" size="sm" className="flex-1" onClick={() => { navigate("/auth"); setMobileOpen(false); }}>Log In</Button>
+                    <Button variant="default" size="sm" className="flex-1" onClick={() => { navigate("/auth"); setMobileOpen(false); }}>Sign Up</Button>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
