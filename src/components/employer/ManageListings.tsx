@@ -137,8 +137,8 @@ export default function ManageListings() {
 
   const formatPay = (job: Job) => {
     if (!job.pay_min && !job.pay_max) return "Negotiable";
-    const min = job.pay_min ? `₹${job.pay_min}` : "";
-    const max = job.pay_max ? `₹${job.pay_max}` : "";
+    const min = job.pay_min ? `${job.pay_min}` : "";
+    const max = job.pay_max ? `${job.pay_max}` : "";
     const type = job.pay_type === "hourly" ? "/hr" : job.pay_type === "daily" ? "/day" : "";
     return min && max ? `${min} - ${max}${type}` : `${min || max}${type}`;
   };
