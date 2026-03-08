@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-le
 import L from "leaflet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, DollarSign, Send, BookmarkCheck, Bookmark, Navigation, Loader2 } from "lucide-react";
+import { MapPin, DollarSign, Send, BookmarkCheck, Bookmark, Navigation, Loader2, Home } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 
 // Fix default marker icon
@@ -49,6 +49,9 @@ interface JobMapViewProps {
   onToggleSave: (jobId: string) => void;
   formatPay: (job: Job) => string;
   userLocation: { lat: number; lng: number } | null;
+  homeLocation: { lat: number; lng: number } | null;
+  onUseHomeLocation: () => void;
+  locationSource: "gps" | "home" | null;
   onRequestLocation: () => void;
   locatingUser: boolean;
   radiusKm: number;
@@ -70,7 +73,7 @@ function RecenterMap({ center, zoom }: { center: [number, number]; zoom: number 
 
 export default function JobMapView({
   jobs, savedJobIds, appliedJobIds, onApply, onToggleSave, formatPay,
-  userLocation, onRequestLocation, locatingUser, radiusKm,
+  userLocation, homeLocation, onUseHomeLocation, locationSource, onRequestLocation, locatingUser, radiusKm,
 }: JobMapViewProps) {
   const geoJobs = useMemo(() => jobs.filter((j) => j.location_lat && j.location_lng), [jobs]);
 
@@ -95,17 +98,28 @@ export default function JobMapView({
   return (
     <div className="relative">
       {/* My Location button */}
-      <div className="absolute top-3 right-3 z-[1000]">
+      <div className="absolute top-3 right-3 z-[1000] flex gap-2">
         <Button
           size="sm"
-          variant={userLocation ? "default" : "secondary"}
+          variant={locationSource === "gps" ? "default" : "secondary"}
           onClick={onRequestLocation}
           disabled={locatingUser}
           className="shadow-lg gap-1.5"
         >
           {locatingUser ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />}
-          {locatingUser ? "Locating..." : userLocation ? "My Location" : "Use My Location"}
+          {locatingUser ? "Locating..." : "Use GPS"}
         </Button>
+
+        {homeLocation && (
+          <Button
+            size="sm"
+            variant={locationSource === "home" ? "default" : "secondary"}
+            onClick={onUseHomeLocation}
+            className="shadow-lg gap-1.5"
+          >
+            <Home size={14} /> Home
+          </Button>
+        )}
       </div>
 
       {geoJobs.length === 0 && !userLocation && (
