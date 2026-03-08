@@ -1,6 +1,4 @@
-import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { HardHat, Building2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,43 +9,23 @@ const roles = [
     icon: HardHat,
     title: "Worker",
     desc: "Find nearby jobs, build your skill profile, and apply with a single click.",
-    cta: "Continue as Worker",
+    cta: "Sign up as Worker",
   },
   {
     id: "employer" as const,
     icon: Building2,
     title: "Employer",
     desc: "Post jobs, find verified workers nearby, and hire within minutes.",
-    cta: "Continue as Employer",
+    cta: "Sign up as Employer",
   },
 ];
 
 const RoleSelectionPage = () => {
-  const { user, loading, userRole, setRole } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
-  }, [user, loading, navigate]);
-
-  useEffect(() => {
-    if (userRole === "worker") navigate("/dashboard/worker");
-    if (userRole === "employer") navigate("/dashboard/employer");
-  }, [userRole, navigate]);
-
-  const handleSelect = async (role: "worker" | "employer") => {
-    await setRole(role);
+  const handleSelect = (role: "worker" | "employer") => {
+    navigate(`/auth?mode=signup&role=${role}`);
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -69,7 +47,7 @@ const RoleSelectionPage = () => {
             Choose Your Role
           </h1>
           <p className="text-muted-foreground text-lg">
-            How would you like to use LocalHire?
+            Select how you want to use LocalHire, then create your account.
           </p>
         </motion.div>
 
@@ -99,6 +77,16 @@ const RoleSelectionPage = () => {
               </Button>
             </motion.div>
           ))}
+        </div>
+
+        <div className="text-center mt-8 text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <button
+            className="text-primary font-medium hover:underline"
+            onClick={() => navigate("/auth?mode=login")}
+          >
+            Sign In
+          </button>
         </div>
       </div>
     </div>

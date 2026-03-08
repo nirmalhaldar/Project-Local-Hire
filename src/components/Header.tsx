@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
-  { label: "Browse Jobs", href: "#categories" },
   { label: "Categories", href: "#categories" },
   { label: "How It Works", href: "#how-it-works" },
-  { label: "For Employers", href: "#employers" },
+  { label: "Trust & Safety", href: "#trust" },
 ];
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, userRole, signOut } = useAuth();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+
+  const dashboardPath = userRole === "employer" ? "/dashboard/employer" : "/dashboard/worker";
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -44,13 +45,13 @@ const Header = () => {
         <div className="hidden md:flex items-center gap-3">
           {user ? (
             <>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/role-selection")}>Dashboard</Button>
-              <Button variant="outline" size="sm" onClick={signOut}><LogOut size={14} /> Sign Out</Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate(dashboardPath)}>Dashboard</Button>
+              <Button variant="outline" size="sm" onClick={signOut}>Sign Out</Button>
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>Log In</Button>
-              <Button variant="default" size="sm" onClick={() => navigate("/auth")}>Sign Up</Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/auth?mode=login")}>Log In</Button>
+              <Button variant="default" size="sm" onClick={() => navigate("/role-selection")}>Sign Up</Button>
             </>
           )}
         </div>
@@ -86,13 +87,13 @@ const Header = () => {
               <div className="flex gap-3 pt-2">
                 {user ? (
                   <>
-                    <Button variant="ghost" size="sm" className="flex-1" onClick={() => { navigate("/role-selection"); setMobileOpen(false); }}>Dashboard</Button>
+                    <Button variant="ghost" size="sm" className="flex-1" onClick={() => { navigate(dashboardPath); setMobileOpen(false); }}>Dashboard</Button>
                     <Button variant="outline" size="sm" className="flex-1" onClick={() => { signOut(); setMobileOpen(false); }}>Sign Out</Button>
                   </>
                 ) : (
                   <>
-                    <Button variant="ghost" size="sm" className="flex-1" onClick={() => { navigate("/auth"); setMobileOpen(false); }}>Log In</Button>
-                    <Button variant="default" size="sm" className="flex-1" onClick={() => { navigate("/auth"); setMobileOpen(false); }}>Sign Up</Button>
+                    <Button variant="ghost" size="sm" className="flex-1" onClick={() => { navigate("/auth?mode=login"); setMobileOpen(false); }}>Log In</Button>
+                    <Button variant="default" size="sm" className="flex-1" onClick={() => { navigate("/role-selection"); setMobileOpen(false); }}>Sign Up</Button>
                   </>
                 )}
               </div>
