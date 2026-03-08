@@ -264,17 +264,27 @@ export default function JobSearch() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
             <Input placeholder="Search jobs, skills, locations..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
-              variant={userLocation ? "default" : "outline"}
+              variant={locationSource === "gps" ? "default" : "outline"}
               size="sm"
               onClick={handleRequestLocation}
               disabled={locatingUser}
               className="gap-1.5"
             >
               {locatingUser ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />}
-              {locatingUser ? "Locating..." : userLocation ? "Near Me" : "My Location"}
+              {locatingUser ? "Locating..." : "Use GPS"}
             </Button>
+            {homeLocation && (
+              <Button
+                variant={locationSource === "home" ? "default" : "outline"}
+                size="sm"
+                onClick={handleUseHomeLocation}
+                className="gap-1.5"
+              >
+                <Home size={14} /> Home Location
+              </Button>
+            )}
             <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="gap-1">
               Filters <ChevronDown size={14} className={`transition ${showFilters ? "rotate-180" : ""}`} />
             </Button>
@@ -412,6 +422,9 @@ export default function JobSearch() {
           onToggleSave={handleToggleSave}
           formatPay={formatPay}
           userLocation={userLocation}
+          homeLocation={homeLocation ? { lat: homeLocation.lat, lng: homeLocation.lng } : null}
+          onUseHomeLocation={handleUseHomeLocation}
+          locationSource={locationSource}
           onRequestLocation={handleRequestLocation}
           locatingUser={locatingUser}
           radiusKm={radiusKm}
