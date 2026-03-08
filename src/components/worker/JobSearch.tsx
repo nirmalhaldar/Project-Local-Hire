@@ -132,7 +132,7 @@ export default function JobSearch() {
     setReportDesc("");
   };
 
-  const filteredJobs = jobs.filter((job) => {
+  const baseFiltered = jobs.filter((job) => {
     const matchSearch = !search || job.title.toLowerCase().includes(search.toLowerCase()) || job.description?.toLowerCase().includes(search.toLowerCase()) || job.location_address?.toLowerCase().includes(search.toLowerCase());
     const matchCategory = category === "All" || job.category === category;
     const matchType = jobType === "all" || job.job_type === jobType;
@@ -140,6 +140,12 @@ export default function JobSearch() {
     const matchSalary = !job.pay_max || job.pay_max >= salaryRange[0];
     return matchSearch && matchCategory && matchType && matchRole && matchSalary;
   });
+
+  const filteredJobs = activeTab === "recommended"
+    ? baseFiltered.filter((j) => recommendedIds.includes(j.id))
+    : activeTab === "highpaying"
+    ? baseFiltered.filter((j) => highPayingIds.includes(j.id))
+    : baseFiltered;
 
   const formatPay = (job: Job) => {
     if (!job.pay_min && !job.pay_max) return "Negotiable";
