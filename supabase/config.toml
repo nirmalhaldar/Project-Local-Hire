@@ -1,1 +1,4 @@
 project_id = "lcrmlmnttdoehygqiupx"
+
+[functions.job-recommendations]
+verify_jwt = true
