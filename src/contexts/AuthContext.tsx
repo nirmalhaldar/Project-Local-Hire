@@ -56,12 +56,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, role: "worker" | "employer", fullName: string): Promise<{ error: string | null }> => {
-    // Check if email already exists with a different role
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, role },
       },
     });
 
@@ -69,15 +68,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { error: signUpError.message };
     }
 
-    if (authData.user) {
-      // Insert the role
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({ user_id: authData.user.id, role });
-
-      if (roleError) {
-        return { error: "Account created but failed to set role. Please contact support." };
-      }
+    // Role is auto-assigned via database trigger from user metadata
+    if (authData.session) {
       setUserRole(role);
     }
 
