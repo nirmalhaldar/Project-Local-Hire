@@ -92,6 +92,38 @@ const AuthPage = () => {
             </span>
           </div>
 
+          {/* Email confirmation sent screen */}
+          {emailSent ? (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <MailCheck className="text-primary" size={32} />
+              </div>
+              <h2 className="font-display font-bold text-xl text-foreground mb-2">
+                Check your email
+              </h2>
+              <p className="text-muted-foreground text-sm mb-4">
+                We've sent a confirmation link to<br />
+                <span className="font-medium text-foreground">{email}</span>
+              </p>
+              <p className="text-muted-foreground text-xs mb-6">
+                Click the link in the email to verify your account. Check your spam folder if you don't see it.
+              </p>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setEmailSent(false);
+                  setIsSignUp(false);
+                  setError(null);
+                  navigate("/auth?mode=login", { replace: true });
+                }}
+              >
+                Back to Sign In
+              </Button>
+            </div>
+          ) : (
+            <>
+
           {/* Role badge for signup */}
           {isSignUp && roleInfo && (
             <div className="flex items-center justify-center gap-2 mb-4">
