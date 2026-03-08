@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Shield, Eye, EyeOff, HardHat, Building2 } from "lucide-react";
+import { Shield, Eye, EyeOff, HardHat, Building2, MailCheck } from "lucide-react";
 
 const AuthPage = () => {
   const { signUp, signIn, user, loading, userRole } = useAuth();
