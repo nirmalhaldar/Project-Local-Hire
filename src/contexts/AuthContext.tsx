@@ -7,9 +7,9 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   userRole: string | null;
-  signInWithGoogle: () => Promise<void>;
+  signUp: (email: string, password: string, role: "worker" | "employer", fullName: string) => Promise<{ error: string | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
-  setRole: (role: "worker" | "employer") => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,7 +35,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          // Use setTimeout to avoid potential deadlock with Supabase auth
           setTimeout(() => fetchRole(session.user.id), 0);
         } else {
           setUserRole(null);
@@ -56,13 +55,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
+  const signUp = async (email: string, password: string, role: "worker" | "employer", fullName: string): Promise<{ error: string | null }> => {
+    // Check if email already exists with a different role
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
       options: {
-        redirectTo: `${window.location.origin}/role-selection`,
+        data: { full_name: fullName },
       },
     });
+
+    if (signUpError) {
+      return { error: signUpError.message };
+    }
+
+    if (authData.user) {
+      // Insert the role
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({ user_id: authData.user.id, role });
+
+      if (roleError) {
+        return { error: "Account created but failed to set role. Please contact support." };
+      }
+      setUserRole(role);
+    }
+
+    return { error: null };
+  };
+
+  const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      return { error: error.message };
+    }
+    return { error: null };
   };
 
   const signOut = async () => {
@@ -70,18 +97,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserRole(null);
   };
 
-  const setRole = async (role: "worker" | "employer") => {
-    if (!user) return;
-    const { error } = await supabase
-      .from("user_roles")
-      .insert({ user_id: user.id, role });
-    if (!error) {
-      setUserRole(role);
-    }
-  };
-
   return (
-    <AuthContext.Provider value={{ user, session, loading, userRole, signInWithGoogle, signOut, setRole }}>
+    <AuthContext.Provider value={{ user, session, loading, userRole, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
