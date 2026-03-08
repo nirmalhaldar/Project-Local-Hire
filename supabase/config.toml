@@ -2,3 +2,6 @@ project_id = "lcrmlmnttdoehygqiupx"
 
 [functions.job-recommendations]
 verify_jwt = true
+
+[functions.ai-job-description]
+verify_jwt = true
