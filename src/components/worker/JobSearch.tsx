@@ -227,6 +227,19 @@ export default function JobSearch() {
         )}
       </div>
 
+      {/* AI Recommendation Tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <Button variant={activeTab === "all" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("all")}>
+          <Briefcase size={14} className="mr-1.5" /> All Jobs
+        </Button>
+        <Button variant={activeTab === "recommended" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("recommended")} disabled={loadingRecs}>
+          <Sparkles size={14} className="mr-1.5" /> {loadingRecs ? "Loading..." : "Recommended for You"}
+        </Button>
+        <Button variant={activeTab === "highpaying" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("highpaying")} disabled={loadingRecs}>
+          <TrendingUp size={14} className="mr-1.5" /> High Paying
+        </Button>
+      </div>
+
       {/* Results */}
       {loading ? (
         <div className="grid gap-4 md:grid-cols-2">
