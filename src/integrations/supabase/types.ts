@@ -144,6 +144,7 @@ export type Database = {
           status: string | null
           title: string
           updated_at: string
+          vacancies: number | null
         }
         Insert: {
           category: string
@@ -163,6 +164,7 @@ export type Database = {
           status?: string | null
           title: string
           updated_at?: string
+          vacancies?: number | null
         }
         Update: {
           category?: string
@@ -182,6 +184,7 @@ export type Database = {
           status?: string | null
           title?: string
           updated_at?: string
+          vacancies?: number | null
         }
         Relationships: []
       }
@@ -380,6 +383,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      worker_ratings: {
+        Row: {
+          behavior: number | null
+          created_at: string
+          employer_id: string
+          id: string
+          job_id: string
+          punctuality: number | null
+          rating: number
+          review: string | null
+          skill_performance: number | null
+          worker_id: string
+        }
+        Insert: {
+          behavior?: number | null
+          created_at?: string
+          employer_id: string
+          id?: string
+          job_id: string
+          punctuality?: number | null
+          rating: number
+          review?: string | null
+          skill_performance?: number | null
+          worker_id: string
+        }
+        Update: {
+          behavior?: number | null
+          created_at?: string
+          employer_id?: string
+          id?: string
+          job_id?: string
+          punctuality?: number | null
+          rating?: number
+          review?: string | null
+          skill_performance?: number | null
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_ratings_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       worker_skills: {
         Row: {
