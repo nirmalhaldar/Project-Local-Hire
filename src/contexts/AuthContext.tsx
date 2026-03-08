@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Supabase returns a user with no identities for existing accounts
     if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
-      return { error: "An account already exists with this email. Please sign in instead." };
+      return { error: "An account already exists with this email. You cannot use the same email for a different role. Please sign in instead." };
     }
 
     // Role is auto-assigned via database trigger from user metadata
