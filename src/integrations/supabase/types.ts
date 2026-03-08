@@ -14,6 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
+      employer_ratings: {
+        Row: {
+          created_at: string
+          employer_id: string
+          id: string
+          job_id: string
+          rating: number
+          review: string | null
+          worker_id: string
+        }
+        Insert: {
+          created_at?: string
+          employer_id: string
+          id?: string
+          job_id: string
+          rating: number
+          review?: string | null
+          worker_id: string
+        }
+        Update: {
+          created_at?: string
+          employer_id?: string
+          id?: string
+          job_id?: string
+          rating?: number
+          review?: string | null
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employer_ratings_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_applications: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          status: string | null
+          updated_at: string
+          worker_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          status?: string | null
+          updated_at?: string
+          worker_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          status?: string | null
+          updated_at?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_reports: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          job_id: string
+          reason: string
+          reporter_id: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          job_id: string
+          reason: string
+          reporter_id: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          job_id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_reports_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           category: string
@@ -21,12 +132,14 @@ export type Database = {
           description: string | null
           employer_id: string
           id: string
+          job_type: string | null
           location_address: string | null
           location_lat: number | null
           location_lng: number | null
           pay_max: number | null
           pay_min: number | null
           pay_type: string | null
+          roles_required: string[] | null
           skills_required: string[] | null
           status: string | null
           title: string
@@ -38,12 +151,14 @@ export type Database = {
           description?: string | null
           employer_id: string
           id?: string
+          job_type?: string | null
           location_address?: string | null
           location_lat?: number | null
           location_lng?: number | null
           pay_max?: number | null
           pay_min?: number | null
           pay_type?: string | null
+          roles_required?: string[] | null
           skills_required?: string[] | null
           status?: string | null
           title: string
@@ -55,12 +170,14 @@ export type Database = {
           description?: string | null
           employer_id?: string
           id?: string
+          job_type?: string | null
           location_address?: string | null
           location_lat?: number | null
           location_lng?: number | null
           pay_max?: number | null
           pay_min?: number | null
           pay_type?: string | null
+          roles_required?: string[] | null
           skills_required?: string[] | null
           status?: string | null
           title?: string
@@ -68,35 +185,123 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          job_id: string | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          job_id?: string | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          job_id?: string | null
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          availability_status: string | null
           avatar_url: string | null
+          bio: string | null
+          categories: string[] | null
           created_at: string
           email: string | null
           full_name: string | null
+          gig_wage_daily: number | null
           id: string
+          is_verified: boolean | null
           phone: string | null
+          roles: string[] | null
           updated_at: string
+          visiting_fee: number | null
         }
         Insert: {
+          availability_status?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          categories?: string[] | null
           created_at?: string
           email?: string | null
           full_name?: string | null
+          gig_wage_daily?: number | null
           id: string
+          is_verified?: boolean | null
           phone?: string | null
+          roles?: string[] | null
           updated_at?: string
+          visiting_fee?: number | null
         }
         Update: {
+          availability_status?: string | null
           avatar_url?: string | null
+          bio?: string | null
+          categories?: string[] | null
           created_at?: string
           email?: string | null
           full_name?: string | null
+          gig_wage_daily?: number | null
           id?: string
+          is_verified?: boolean | null
           phone?: string | null
+          roles?: string[] | null
           updated_at?: string
+          visiting_fee?: number | null
         }
         Relationships: []
+      }
+      saved_jobs: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_jobs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
