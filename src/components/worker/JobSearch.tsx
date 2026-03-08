@@ -180,10 +180,15 @@ export default function JobSearch() {
     return matchSearch && matchCategory && matchType && matchRole && matchSalary && matchDistance;
   });
 
+  // Compute high paying from all jobs client-side (top 20 by pay_max)
+  const highPayingComputed = activeTab === "highpaying"
+    ? [...baseFiltered].sort((a, b) => (b.pay_max || 0) - (a.pay_max || 0)).slice(0, 20)
+    : baseFiltered;
+
   const tabFiltered = activeTab === "recommended"
     ? baseFiltered.filter((j) => recommendedIds.includes(j.id))
     : activeTab === "highpaying"
-    ? baseFiltered.filter((j) => highPayingIds.includes(j.id))
+    ? highPayingComputed
     : baseFiltered;
 
   // Sort by distance when user location is active
