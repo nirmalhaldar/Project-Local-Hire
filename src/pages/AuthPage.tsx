@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Shield, Eye, EyeOff, HardHat, Building2 } from "lucide-react";
+import { Shield, Eye, EyeOff, HardHat, Building2, MailCheck } from "lucide-react";
 
 const AuthPage = () => {
   const { signUp, signIn, user, loading, userRole } = useAuth();
@@ -21,6 +21,7 @@ const AuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     if (!loading && user && userRole) {
@@ -53,7 +54,11 @@ const AuthPage = () => {
         return;
       }
       const { error } = await signUp(email, password, roleParam, fullName.trim());
-      if (error) setError(error);
+      if (error) {
+        setError(error);
+      } else {
+        setEmailSent(true);
+      }
     } else {
       const { error } = await signIn(email, password);
       if (error) setError(error);
@@ -86,6 +91,38 @@ const AuthPage = () => {
               Local<span className="text-primary">Hire</span>
             </span>
           </div>
+
+          {/* Email confirmation sent screen */}
+          {emailSent ? (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <MailCheck className="text-primary" size={32} />
+              </div>
+              <h2 className="font-display font-bold text-xl text-foreground mb-2">
+                Check your email
+              </h2>
+              <p className="text-muted-foreground text-sm mb-4">
+                We've sent a confirmation link to<br />
+                <span className="font-medium text-foreground">{email}</span>
+              </p>
+              <p className="text-muted-foreground text-xs mb-6">
+                Click the link in the email to verify your account. Check your spam folder if you don't see it.
+              </p>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setEmailSent(false);
+                  setIsSignUp(false);
+                  setError(null);
+                  navigate("/auth?mode=login", { replace: true });
+                }}
+              >
+                Back to Sign In
+              </Button>
+            </div>
+          ) : (
+            <>
 
           {/* Role badge for signup */}
           {isSignUp && roleInfo && (
@@ -194,6 +231,8 @@ const AuthPage = () => {
             <Shield size={14} />
             Secure & encrypted
           </div>
+          </>
+          )}
         </div>
       </motion.div>
     </div>
