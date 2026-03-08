@@ -27,7 +27,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .eq("user_id", userId)
       .maybeSingle();
     setUserRole(data?.role ?? null);
-    return data?.role ?? null;
   };
 
   useEffect(() => {
@@ -36,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchRole(session.user.id);
+          setTimeout(() => fetchRole(session.user.id), 0);
         } else {
           setUserRole(null);
         }
@@ -44,11 +43,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchRole(session.user.id);
+        fetchRole(session.user.id);
       }
       setLoading(false);
     });
