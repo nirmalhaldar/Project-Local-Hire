@@ -204,7 +204,7 @@ const AuthPage = () => {
               </div>
             )}
 
-
+            <Button type="submit" className="w-full" size="lg" disabled={submitting}>
               {submitting ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
             </Button>
           </form>
