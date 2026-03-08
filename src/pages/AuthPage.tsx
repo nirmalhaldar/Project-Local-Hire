@@ -192,7 +192,19 @@ const AuthPage = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg" disabled={submitting}>
+            {!isSignUp && (
+              <div className="text-right mt-1">
+                <button
+                  type="button"
+                  className="text-xs text-primary hover:underline"
+                  onClick={() => navigate("/forgot-password")}
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
+
               {submitting ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
             </Button>
           </form>
