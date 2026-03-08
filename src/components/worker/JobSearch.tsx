@@ -11,6 +11,7 @@ import { Search, MapPin, DollarSign, List, Map, Clock, Briefcase, Heart, Send, B
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import JobMapView from "./JobMapView";
 
 interface Job {
   id: string;
@@ -301,14 +302,14 @@ export default function JobSearch() {
           ))}
         </div>
       ) : (
-        <Card className="h-[500px] flex items-center justify-center">
-          <div className="text-center">
-            <Map className="mx-auto text-muted-foreground mb-3" size={48} />
-            <h3 className="font-display font-semibold text-lg text-foreground mb-1">Map View</h3>
-            <p className="text-muted-foreground text-sm">{filteredJobs.length} job{filteredJobs.length !== 1 ? "s" : ""} available</p>
-            <p className="text-muted-foreground text-xs mt-2">Google Maps integration coming soon.</p>
-          </div>
-        </Card>
+        <JobMapView
+          jobs={filteredJobs}
+          savedJobIds={savedJobIds}
+          appliedJobIds={appliedJobIds}
+          onApply={handleApply}
+          onToggleSave={handleToggleSave}
+          formatPay={formatPay}
+        />
       )}
 
       {/* Report Dialog */}
