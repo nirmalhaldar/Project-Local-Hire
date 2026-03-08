@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { PlusCircle, X, MapPin, DollarSign, Briefcase, Sparkles, Loader2 } from "lucide-react";
+import { PlusCircle, X, MapPin, IndianRupee, Briefcase, Sparkles, Loader2 } from "lucide-react";
 import { z } from "zod";
 import PlacesAutocomplete from "@/components/shared/PlacesAutocomplete";
 
@@ -237,7 +237,7 @@ Write in a direct, professional tone. Include key responsibilities and basic req
 
         {/* Pay */}
         <Card className="p-6 space-y-4">
-          <h2 className="font-semibold text-foreground text-lg flex items-center gap-2"><DollarSign size={18} /> Payment</h2>
+          <h2 className="font-semibold text-foreground text-lg flex items-center gap-2"><IndianRupee size={18} /> Payment</h2>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium text-foreground mb-1.5 block">Min Pay (₹)</label>

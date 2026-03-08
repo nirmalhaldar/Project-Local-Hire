@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Search, MapPin, DollarSign, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, X } from "lucide-react";
+import { Search, MapPin, IndianRupee, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -355,7 +355,7 @@ export default function JobSearch() {
                     <Navigation size={12} />{getJobDistance(job)!.toFixed(1)} km away
                   </span>
                 )}
-                <span className="flex items-center gap-1 text-primary font-medium"><DollarSign size={14} />{formatPay(job)}</span>
+                <span className="flex items-center gap-1 text-primary font-medium"><IndianRupee size={14} />{formatPay(job)}</span>
                 <span className="flex items-center gap-1 text-muted-foreground"><Clock size={12} />{timeAgo(job.created_at)}</span>
               </div>
 
