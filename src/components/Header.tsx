@@ -4,12 +4,7 @@ import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-
-const navLinks = [
-  { label: "Browse Jobs", href: "/browse-jobs" },
-  { label: "Post Jobs", href: "/auth?mode=login&redirect=post-job" },
-  { label: "Categories", href: "#categories" },
-];
+import { toast } from "@/hooks/use-toast";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -17,6 +12,30 @@ const Header = () => {
   const navigate = useNavigate();
 
   const dashboardPath = userRole === "admin" ? "/dashboard/admin" : userRole === "employer" ? "/dashboard/employer" : "/dashboard/worker";
+
+  const handleNavClick = (href: string, label: string) => {
+    if (label === "Post Jobs") {
+      if (user && userRole === "employer") {
+        navigate("/dashboard/employer/post-job");
+      } else if (user) {
+        toast({ title: "Employer Account Required", description: "Only employers can post jobs.", variant: "destructive" });
+      } else {
+        navigate("/auth?mode=login");
+      }
+    } else if (href.startsWith("#")) {
+      // Hash link — stay on page
+      window.location.hash = href;
+    } else {
+      navigate(href);
+    }
+    setMobileOpen(false);
+  };
+
+  const navLinks = [
+    { label: "Browse Jobs", href: "/browse-jobs" },
+    { label: "Post Jobs", href: "#" },
+    { label: "Categories", href: "#categories" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -32,13 +51,13 @@ const Header = () => {
 
         <nav className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a
+            <button
               key={link.label}
-              href={link.href}
+              onClick={() => handleNavClick(link.href, link.label)}
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               {link.label}
-            </a>
+            </button>
           ))}
         </nav>
 
@@ -75,14 +94,13 @@ const Header = () => {
           >
             <div className="px-4 py-4 flex flex-col gap-3">
               {navLinks.map((link) => (
-                <a
+                <button
                   key={link.label}
-                  href={link.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground py-2"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() => handleNavClick(link.href, link.label)}
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground py-2 text-left"
                 >
                   {link.label}
-                </a>
+                </button>
               ))}
               <div className="flex gap-3 pt-2">
                 {user ? (
