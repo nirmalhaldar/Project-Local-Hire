@@ -6,9 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
+  { label: "Browse Jobs", href: "/browse-jobs" },
+  { label: "Post Jobs", href: "/auth?mode=login&redirect=post-job" },
   { label: "Categories", href: "#categories" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Trust & Safety", href: "#trust" },
 ];
 
 const Header = () => {

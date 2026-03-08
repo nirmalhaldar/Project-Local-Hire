@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   Building2, Truck, Factory, Wrench, Home, UtensilsCrossed,
   Wheat, Package, Zap, HeartPulse, HardHat
@@ -19,6 +20,12 @@ const categories = [
 ];
 
 const CategoriesSection = () => {
+  const navigate = useNavigate();
+
+  const handleCategoryClick = (category: string) => {
+    navigate(`/browse-jobs?category=${encodeURIComponent(category)}`);
+  };
+
   return (
     <section id="categories" className="py-20 bg-muted/50">
       <div className="container mx-auto px-4">
@@ -44,6 +51,7 @@ const CategoriesSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.05 }}
+              onClick={() => handleCategoryClick(cat.title)}
               className="group bg-card rounded-xl border border-border p-5 hover:border-primary/40 hover:shadow-lg transition-all duration-300 cursor-pointer"
             >
               <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
