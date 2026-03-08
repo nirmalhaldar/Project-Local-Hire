@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
@@ -7,9 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Search, MapPin, DollarSign, List, Map, Clock, Briefcase, Heart, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp } from "lucide-react";
+import { Search, MapPin, DollarSign, List, Map, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import JobMapView from "./JobMapView";
 
@@ -55,6 +55,42 @@ export default function JobSearch() {
   const [highPayingIds, setHighPayingIds] = useState<string[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "recommended" | "highpaying">("all");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locatingUser, setLocatingUser] = useState(false);
+  const [radiusKm, setRadiusKm] = useState(25);
+
+  const getDistanceKm = useCallback((lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }, []);
+
+  const handleRequestLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      toast({ title: "Not supported", description: "Geolocation is not supported by your browser.", variant: "destructive" });
+      return;
+    }
+    setLocatingUser(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocatingUser(false);
+        toast({ title: "Location found!", description: "Showing jobs near your location." });
+      },
+      (err) => {
+        setLocatingUser(false);
+        toast({ title: "Location error", description: err.message, variant: "destructive" });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
+  const getJobDistance = useCallback((job: Job) => {
+    if (!userLocation || !job.location_lat || !job.location_lng) return null;
+    return getDistanceKm(userLocation.lat, userLocation.lng, job.location_lat, job.location_lng);
+  }, [userLocation, getDistanceKm]);
 
   useEffect(() => {
     fetchJobs();
@@ -139,14 +175,24 @@ export default function JobSearch() {
     const matchType = jobType === "all" || job.job_type === jobType;
     const matchRole = role === "All Roles" || (job.roles_required || []).includes(role);
     const matchSalary = !job.pay_max || job.pay_max >= salaryRange[0];
-    return matchSearch && matchCategory && matchType && matchRole && matchSalary;
+    const matchDistance = !userLocation || !job.location_lat || !job.location_lng || getDistanceKm(userLocation.lat, userLocation.lng, job.location_lat, job.location_lng) <= radiusKm;
+    return matchSearch && matchCategory && matchType && matchRole && matchSalary && matchDistance;
   });
 
-  const filteredJobs = activeTab === "recommended"
+  const tabFiltered = activeTab === "recommended"
     ? baseFiltered.filter((j) => recommendedIds.includes(j.id))
     : activeTab === "highpaying"
     ? baseFiltered.filter((j) => highPayingIds.includes(j.id))
     : baseFiltered;
+
+  // Sort by distance when user location is active
+  const filteredJobs = userLocation
+    ? [...tabFiltered].sort((a, b) => {
+        const distA = getJobDistance(a) ?? Infinity;
+        const distB = getJobDistance(b) ?? Infinity;
+        return distA - distB;
+      })
+    : tabFiltered;
 
   const formatPay = (job: Job) => {
     if (!job.pay_min && !job.pay_max) return "Negotiable";
@@ -184,6 +230,16 @@ export default function JobSearch() {
             <Input placeholder="Search jobs, skills, locations..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
           </div>
           <div className="flex gap-2">
+            <Button
+              variant={userLocation ? "default" : "outline"}
+              size="sm"
+              onClick={handleRequestLocation}
+              disabled={locatingUser}
+              className="gap-1.5"
+            >
+              {locatingUser ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />}
+              {locatingUser ? "Locating..." : userLocation ? "Near Me" : "My Location"}
+            </Button>
             <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="gap-1">
               Filters <ChevronDown size={14} className={`transition ${showFilters ? "rotate-180" : ""}`} />
             </Button>
@@ -223,6 +279,12 @@ export default function JobSearch() {
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Max Salary: ₹{salaryRange[1].toLocaleString()}</label>
                 <Slider value={salaryRange} onValueChange={setSalaryRange} min={0} max={50000} step={500} className="mt-2" />
               </div>
+              {userLocation && (
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Radius: {radiusKm} km</label>
+                  <Slider value={[radiusKm]} onValueChange={(v) => setRadiusKm(v[0])} min={1} max={100} step={1} className="mt-2" />
+                </div>
+              )}
             </div>
           </Card>
         )}
@@ -278,6 +340,11 @@ export default function JobSearch() {
 
               <div className="flex flex-wrap gap-3 text-sm mb-3">
                 {job.location_address && <span className="flex items-center gap-1 text-muted-foreground"><MapPin size={14} />{job.location_address}</span>}
+                {getJobDistance(job) !== null && (
+                  <span className="flex items-center gap-1 text-accent-foreground font-medium">
+                    <Navigation size={12} />{getJobDistance(job)!.toFixed(1)} km away
+                  </span>
+                )}
                 <span className="flex items-center gap-1 text-primary font-medium"><DollarSign size={14} />{formatPay(job)}</span>
                 <span className="flex items-center gap-1 text-muted-foreground"><Clock size={12} />{timeAgo(job.created_at)}</span>
               </div>
@@ -309,6 +376,10 @@ export default function JobSearch() {
           onApply={handleApply}
           onToggleSave={handleToggleSave}
           formatPay={formatPay}
+          userLocation={userLocation}
+          onRequestLocation={handleRequestLocation}
+          locatingUser={locatingUser}
+          radiusKm={radiusKm}
         />
       )}
 
