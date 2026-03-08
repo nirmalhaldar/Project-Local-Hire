@@ -1,8 +1,27 @@
-import { useState, useCallback, useMemo, useRef } from "react";
-import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF, CircleF } from "@react-google-maps/api";
+import { useState, useMemo, useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
+import L from "leaflet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, DollarSign, Send, BookmarkCheck, Bookmark, Navigation, Loader2 } from "lucide-react";
+import "leaflet/dist/leaflet.css";
+
+// Fix default marker icon
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
+
+const userIcon = new L.Icon({
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  className: "hue-rotate-[200deg] saturate-200",
+});
 
 interface Job {
   id: string;
@@ -35,28 +54,26 @@ interface JobMapViewProps {
   radiusKm: number;
 }
 
-const containerStyle = { width: "100%", height: "500px", borderRadius: "0.75rem" };
-const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 };
+function RecenterMap({ center, zoom }: { center: [number, number]; zoom: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center[0], center[1], zoom]);
+  return null;
+}
 
 export default function JobMapView({
   jobs, savedJobIds, appliedJobIds, onApply, onToggleSave, formatPay,
   userLocation, onRequestLocation, locatingUser, radiusKm,
 }: JobMapViewProps) {
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const mapRef = useRef<google.maps.Map | null>(null);
-
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
-  });
-
   const geoJobs = useMemo(() => jobs.filter((j) => j.location_lat && j.location_lng), [jobs]);
 
-  const center = useMemo(() => {
-    if (userLocation) return userLocation;
-    if (geoJobs.length === 0) return DEFAULT_CENTER;
+  const center: [number, number] = useMemo(() => {
+    if (userLocation) return [userLocation.lat, userLocation.lng];
+    if (geoJobs.length === 0) return [20.5937, 78.9629];
     const avgLat = geoJobs.reduce((s, j) => s + j.location_lat!, 0) / geoJobs.length;
     const avgLng = geoJobs.reduce((s, j) => s + j.location_lng!, 0) / geoJobs.length;
-    return { lat: avgLat, lng: avgLng };
+    return [avgLat, avgLng];
   }, [geoJobs, userLocation]);
 
   const zoom = useMemo(() => {
@@ -69,36 +86,14 @@ export default function JobMapView({
     return geoJobs.length === 1 ? 14 : 5;
   }, [userLocation, radiusKm, geoJobs.length]);
 
-  const onMapClick = useCallback(() => setSelectedJob(null), []);
-
-  const handleLocateMe = () => {
-    onRequestLocation();
-  };
-
-  if (loadError) {
-    return (
-      <div className="h-[500px] flex items-center justify-center rounded-xl border border-border bg-muted/30">
-        <p className="text-destructive text-sm">Failed to load Google Maps</p>
-      </div>
-    );
-  }
-
-  if (!isLoaded) {
-    return (
-      <div className="h-[500px] flex items-center justify-center rounded-xl border border-border bg-muted/30 animate-pulse">
-        <p className="text-muted-foreground text-sm">Loading map...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="relative">
-      {/* My Location button overlay */}
-      <div className="absolute top-3 right-3 z-10">
+      {/* My Location button */}
+      <div className="absolute top-3 right-3 z-[1000]">
         <Button
           size="sm"
           variant={userLocation ? "default" : "secondary"}
-          onClick={handleLocateMe}
+          onClick={onRequestLocation}
           disabled={locatingUser}
           className="shadow-lg gap-1.5"
         >
@@ -108,107 +103,82 @@ export default function JobMapView({
       </div>
 
       {geoJobs.length === 0 && !userLocation && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 rounded-xl">
+        <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-background/80 rounded-xl">
           <div className="text-center">
             <MapPin className="mx-auto text-muted-foreground mb-2" size={32} />
             <p className="text-muted-foreground text-sm">No jobs with location data to display on map.</p>
             <p className="text-muted-foreground text-xs mt-1">{jobs.length} jobs available in list view.</p>
-            <Button size="sm" variant="outline" onClick={handleLocateMe} className="mt-3 gap-1.5">
+            <Button size="sm" variant="outline" onClick={onRequestLocation} className="mt-3 gap-1.5">
               <Navigation size={14} /> Find jobs near me
             </Button>
           </div>
         </div>
       )}
 
-      <GoogleMap
-        mapContainerStyle={containerStyle}
+      <MapContainer
         center={center}
         zoom={zoom}
-        onClick={onMapClick}
-        onLoad={(map) => { mapRef.current = map; }}
+        style={{ height: "500px", width: "100%", borderRadius: "0.75rem" }}
+        scrollWheelZoom={true}
       >
-        {/* User location marker */}
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <RecenterMap center={center} zoom={zoom} />
+
+        {/* User location */}
         {userLocation && (
           <>
-            <MarkerF
-              position={userLocation}
-              icon={{
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 10,
-                fillColor: "#3b82f6",
-                fillOpacity: 1,
-                strokeColor: "#ffffff",
-                strokeWeight: 3,
-              }}
-              title="Your location"
-            />
-            <CircleF
-              center={userLocation}
+            <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
+              <Popup>📍 Your location</Popup>
+            </Marker>
+            <Circle
+              center={[userLocation.lat, userLocation.lng]}
               radius={radiusKm * 1000}
-              options={{
-                fillColor: "#3b82f6",
-                fillOpacity: 0.08,
-                strokeColor: "#3b82f6",
-                strokeOpacity: 0.3,
-                strokeWeight: 1,
-              }}
+              pathOptions={{ color: "hsl(var(--primary))", fillOpacity: 0.08, weight: 1 }}
             />
           </>
         )}
 
+        {/* Job markers */}
         {geoJobs.map((job) => (
-          <MarkerF
-            key={job.id}
-            position={{ lat: job.location_lat!, lng: job.location_lng! }}
-            onClick={() => setSelectedJob(job)}
-          />
-        ))}
-
-        {selectedJob && selectedJob.location_lat && selectedJob.location_lng && (
-          <InfoWindowF
-            position={{ lat: selectedJob.location_lat, lng: selectedJob.location_lng }}
-            onCloseClick={() => setSelectedJob(null)}
-          >
-            <div className="max-w-[260px] p-1">
-              <h4 className="font-semibold text-sm text-gray-900 mb-1">{selectedJob.title}</h4>
-              <div className="flex gap-1 mb-2">
-                <Badge variant="secondary" className="text-[10px]">{selectedJob.category}</Badge>
-              </div>
-              {selectedJob.location_address && (
-                <p className="text-xs text-gray-500 flex items-center gap-1 mb-1">
-                  <MapPin size={10} /> {selectedJob.location_address}
-                </p>
-              )}
-              <p className="text-xs font-medium text-green-700 flex items-center gap-1 mb-2">
-                <DollarSign size={10} /> {formatPay(selectedJob)}
-              </p>
-              {selectedJob.description && (
-                <p className="text-xs text-gray-600 line-clamp-2 mb-2">{selectedJob.description}</p>
-              )}
-              <div className="flex gap-1.5">
-                {appliedJobIds.has(selectedJob.id) ? (
-                  <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-                    <Send size={10} /> Applied
-                  </span>
-                ) : (
-                  <button
-                    onClick={() => onApply(selectedJob.id)}
-                    className="text-xs bg-blue-600 text-white px-2.5 py-1 rounded hover:bg-blue-700 transition"
-                  >
-                    Quick Apply
-                  </button>
+          <Marker key={job.id} position={[job.location_lat!, job.location_lng!]}>
+            <Popup>
+              <div className="max-w-[240px]">
+                <h4 className="font-semibold text-sm mb-1">{job.title}</h4>
+                <div className="flex gap-1 mb-1.5">
+                  <Badge variant="secondary" className="text-[10px]">{job.category}</Badge>
+                </div>
+                {job.location_address && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                    <MapPin size={10} /> {job.location_address}
+                  </p>
                 )}
-                <button
-                  onClick={() => onToggleSave(selectedJob.id)}
-                  className="p-1 hover:bg-gray-100 rounded transition"
-                >
-                  {savedJobIds.has(selectedJob.id) ? <BookmarkCheck size={12} className="text-blue-600" /> : <Bookmark size={12} className="text-gray-400" />}
-                </button>
+                <p className="text-xs font-medium text-primary flex items-center gap-1 mb-1.5">
+                  <DollarSign size={10} /> {formatPay(job)}
+                </p>
+                {job.description && <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{job.description}</p>}
+                <div className="flex gap-1.5 items-center">
+                  {appliedJobIds.has(job.id) ? (
+                    <span className="text-xs font-medium flex items-center gap-1 text-primary">
+                      <Send size={10} /> Applied
+                    </span>
+                  ) : (
+                    <Button size="sm" variant="default" className="h-6 text-xs px-2" onClick={() => onApply(job.id)}>
+                      Quick Apply
+                    </Button>
+                  )}
+                  <button onClick={() => onToggleSave(job.id)} className="p-1 hover:bg-muted rounded transition">
+                    {savedJobIds.has(job.id) ? <BookmarkCheck size={12} className="text-primary" /> : <Bookmark size={12} className="text-muted-foreground" />}
+                  </button>
+                </div>
               </div>
-            </div>
-          </InfoWindowF>
-        )}
-      </GoogleMap>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+
       <p className="text-xs text-muted-foreground mt-2 text-center">
         Showing {geoJobs.length} of {jobs.length} jobs with location data
         {userLocation && ` · Within ${radiusKm} km of your location`}

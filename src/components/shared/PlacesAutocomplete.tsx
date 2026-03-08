@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useJsApiLoader } from "@react-google-maps/api";
 import { Input } from "@/components/ui/input";
-import { MapPin, Loader2 } from "lucide-react";
-
-const LIBRARIES: ("places")[] = ["places"];
+import { MapPin, Loader2, Search } from "lucide-react";
 
 interface PlacesAutocompleteProps {
   value: string;
@@ -11,57 +8,91 @@ interface PlacesAutocompleteProps {
   placeholder?: string;
 }
 
-export default function PlacesAutocomplete({ value, onChange, placeholder = "Search for a location..." }: PlacesAutocompleteProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const [inputValue, setInputValue] = useState(value);
+interface NominatimResult {
+  display_name: string;
+  lat: string;
+  lon: string;
+}
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
-    libraries: LIBRARIES,
-  });
+export default function PlacesAutocomplete({ value, onChange, placeholder = "Search for a location..." }: PlacesAutocompleteProps) {
+  const [inputValue, setInputValue] = useState(value);
+  const [suggestions, setSuggestions] = useState<NominatimResult[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setInputValue(value);
   }, [value]);
 
   useEffect(() => {
-    if (!isLoaded || !inputRef.current || autocompleteRef.current) return;
-
-    autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-      types: ["geocode", "establishment"],
-      componentRestrictions: { country: "in" },
-      fields: ["formatted_address", "geometry", "name"],
-    });
-
-    autocompleteRef.current.addListener("place_changed", () => {
-      const place = autocompleteRef.current!.getPlace();
-      if (place.geometry?.location) {
-        const address = place.formatted_address || place.name || "";
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-        setInputValue(address);
-        onChange(address, lat, lng);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
       }
-    });
-  }, [isLoaded, onChange]);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  const handleManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-    onChange(e.target.value, null, null);
+  const searchPlaces = async (query: string) => {
+    if (query.length < 3) { setSuggestions([]); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=in&limit=5`,
+        { headers: { "Accept-Language": "en" } }
+      );
+      const data: NominatimResult[] = await res.json();
+      setSuggestions(data);
+      setShowSuggestions(true);
+    } catch {
+      setSuggestions([]);
+    }
+    setLoading(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInputValue(val);
+    onChange(val, null, null);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => searchPlaces(val), 400);
+  };
+
+  const handleSelect = (result: NominatimResult) => {
+    setInputValue(result.display_name);
+    onChange(result.display_name, parseFloat(result.lat), parseFloat(result.lon));
+    setShowSuggestions(false);
+    setSuggestions([]);
   };
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-      {!isLoaded && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" size={14} />}
+      {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" size={14} />}
       <Input
-        ref={inputRef}
         value={inputValue}
-        onChange={handleManualChange}
+        onChange={handleInputChange}
+        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
         placeholder={placeholder}
         className="pl-9"
       />
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
+          {suggestions.map((result, i) => (
+            <button
+              key={i}
+              onClick={() => handleSelect(result)}
+              className="w-full text-left px-3 py-2.5 text-sm hover:bg-accent transition flex items-start gap-2"
+            >
+              <Search size={14} className="text-muted-foreground mt-0.5 shrink-0" />
+              <span className="line-clamp-2 text-foreground">{result.display_name}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
