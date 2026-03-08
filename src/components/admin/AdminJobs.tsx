@@ -78,8 +78,8 @@ export default function AdminJobs() {
 
   const formatPay = (j: JobRow) => {
     if (!j.pay_min && !j.pay_max) return "Negotiable";
-    const min = j.pay_min ? `₹${j.pay_min}` : "";
-    const max = j.pay_max ? `₹${j.pay_max}` : "";
+    const min = j.pay_min ? `${j.pay_min}` : "";
+    const max = j.pay_max ? `${j.pay_max}` : "";
     const type = j.pay_type === "hourly" ? "/hr" : j.pay_type === "daily" ? "/day" : "";
     return min && max ? `${min}-${max}${type}` : `${min || max}${type}`;
   };
