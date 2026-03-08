@@ -54,7 +54,11 @@ const AuthPage = () => {
         return;
       }
       const { error } = await signUp(email, password, roleParam, fullName.trim());
-      if (error) setError(error);
+      if (error) {
+        setError(error);
+      } else {
+        setEmailSent(true);
+      }
     } else {
       const { error } = await signIn(email, password);
       if (error) setError(error);
