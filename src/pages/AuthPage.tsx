@@ -231,6 +231,8 @@ const AuthPage = () => {
             <Shield size={14} />
             Secure & encrypted
           </div>
+          </>
+          )}
         </div>
       </motion.div>
     </div>
