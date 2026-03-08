@@ -11,6 +11,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import WorkerDashboard from "./pages/WorkerDashboard";
 import EmployerDashboard from "./pages/EmployerDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/dashboard/worker/*" element={<WorkerDashboard />} />
             <Route path="/dashboard/employer/*" element={<EmployerDashboard />} />
+            <Route path="/dashboard/admin/*" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
