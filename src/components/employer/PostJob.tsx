@@ -45,6 +45,8 @@ export default function PostJob() {
   const [category, setCategory] = useState("");
   const [jobType, setJobType] = useState("gig");
   const [locationAddress, setLocationAddress] = useState("");
+  const [locationLat, setLocationLat] = useState<number | null>(null);
+  const [locationLng, setLocationLng] = useState<number | null>(null);
   const [payMin, setPayMin] = useState("");
   const [payMax, setPayMax] = useState("");
   const [payType, setPayType] = useState("daily");
@@ -138,6 +140,8 @@ Write in a direct, professional tone. Include key responsibilities and basic req
       category,
       job_type: jobType,
       location_address: locationAddress.trim() || null,
+      location_lat: locationLat,
+      location_lng: locationLng,
       pay_min: payMin ? Number(payMin) : null,
       pay_max: payMax ? Number(payMax) : null,
       pay_type: payType,
@@ -151,7 +155,8 @@ Write in a direct, professional tone. Include key responsibilities and basic req
     } else {
       toast({ title: "Job Posted!", description: "Your job listing is now live." });
       setTitle(""); setDescription(""); setCategory(""); setJobType("gig");
-      setLocationAddress(""); setPayMin(""); setPayMax(""); setPayType("daily");
+      setLocationAddress(""); setLocationLat(null); setLocationLng(null);
+      setPayMin(""); setPayMax(""); setPayType("daily");
       setSkills([]); setSelectedRoles([]); setVacancies("1");
     }
     setSubmitting(false);
@@ -213,7 +218,20 @@ Write in a direct, professional tone. Include key responsibilities and basic req
           <h2 className="font-semibold text-foreground text-lg flex items-center gap-2"><MapPin size={18} /> Location</h2>
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">Address</label>
-            <Input value={locationAddress} onChange={(e) => setLocationAddress(e.target.value)} placeholder="e.g., Sector 62, Noida, UP" />
+            <PlacesAutocomplete
+              value={locationAddress}
+              onChange={(address, lat, lng) => {
+                setLocationAddress(address);
+                setLocationLat(lat);
+                setLocationLng(lng);
+              }}
+              placeholder="e.g., Sector 62, Noida, UP"
+            />
+            {locationLat && locationLng && (
+              <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
+                <MapPin size={10} /> Coordinates: {locationLat.toFixed(4)}, {locationLng.toFixed(4)}
+              </p>
+            )}
           </div>
         </Card>
 
