@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-le
 import L from "leaflet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, DollarSign, Send, BookmarkCheck, Bookmark, Navigation, Loader2, Home } from "lucide-react";
+import { MapPin, IndianRupee, Send, BookmarkCheck, Bookmark, Navigation, Loader2, Home } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 
 // Fix default marker icon
@@ -177,7 +177,7 @@ export default function JobMapView({
                   </p>
                 )}
                 <p className="text-xs font-medium text-primary flex items-center gap-1 mb-1.5">
-                  <DollarSign size={10} /> {formatPay(job)}
+                  <IndianRupee size={10} /> {formatPay(job)}
                 </p>
                 {job.description && <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{job.description}</p>}
                 <div className="flex gap-1.5 items-center">

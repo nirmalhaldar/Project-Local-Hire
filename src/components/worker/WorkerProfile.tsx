@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { User, Mail, Phone, Plus, X, Save, Shield, BadgeCheck, DollarSign, Briefcase, MapPin } from "lucide-react";
+import { User, Mail, Phone, Plus, X, Save, Shield, BadgeCheck, IndianRupee, Briefcase, MapPin } from "lucide-react";
 import PlacesAutocomplete from "@/components/shared/PlacesAutocomplete";
 
 const ALL_ROLES = ["Driver", "Electrician", "Plumber", "Carpenter", "Painter", "Cleaner", "Gardener", "Mason", "Welder", "Mechanic", "Delivery", "Cook", "Security Guard", "Other"];
@@ -241,11 +241,11 @@ export default function WorkerProfile() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5"><DollarSign size={14} /> Gig Wage (Daily ₹)</label>
+              <label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5"><IndianRupee size={14} /> Gig Wage (Daily ₹)</label>
               <Input type="number" value={profile.gig_wage_daily || ""} onChange={(e) => setProfile({ ...profile, gig_wage_daily: Number(e.target.value) || null })} placeholder="500" />
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5"><DollarSign size={14} /> Visiting Fee (₹)</label>
+              <label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5"><IndianRupee size={14} /> Visiting Fee (₹)</label>
               <Input type="number" value={profile.visiting_fee || ""} onChange={(e) => setProfile({ ...profile, visiting_fee: Number(e.target.value) || null })} placeholder="200" />
             </div>
           </div>

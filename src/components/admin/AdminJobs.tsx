@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Search, Trash2, XCircle, Eye, Briefcase, MapPin, DollarSign } from "lucide-react";
+import { Search, Trash2, XCircle, Eye, Briefcase, MapPin, IndianRupee } from "lucide-react";
 
 interface JobRow {
   id: string;
@@ -141,7 +141,7 @@ export default function AdminJobs() {
               </div>
               <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
                 {j.location_address && <span className="flex items-center gap-1"><MapPin size={12} />{j.location_address}</span>}
-                <span className="flex items-center gap-1"><DollarSign size={12} />{formatPay(j)}</span>
+                <span className="flex items-center gap-1"><IndianRupee size={12} />{formatPay(j)}</span>
                 <span>{j.application_count} application{j.application_count !== 1 ? "s" : ""}</span>
                 <span>{new Date(j.created_at).toLocaleDateString()}</span>
               </div>

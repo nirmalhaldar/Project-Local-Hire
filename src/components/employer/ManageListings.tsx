@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MapPin, DollarSign, Clock, Users, Trash2, XCircle, Eye } from "lucide-react";
+import { MapPin, IndianRupee, Clock, Users, Trash2, XCircle, Eye } from "lucide-react";
 
 interface Job {
   id: string;
@@ -210,7 +210,7 @@ export default function ManageListings() {
 
               <div className="flex flex-wrap gap-3 text-sm mb-4">
                 {job.location_address && <span className="flex items-center gap-1 text-muted-foreground"><MapPin size={14} />{job.location_address}</span>}
-                <span className="flex items-center gap-1 text-primary font-medium"><DollarSign size={14} />{formatPay(job)}</span>
+                <span className="flex items-center gap-1 text-primary font-medium"><IndianRupee size={14} />{formatPay(job)}</span>
               </div>
 
               <div className="flex flex-wrap gap-2">
