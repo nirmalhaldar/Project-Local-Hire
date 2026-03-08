@@ -5,7 +5,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import PostJob from "@/components/employer/PostJob";
 import ManageListings from "@/components/employer/ManageListings";
 import EmployerApplicants from "@/components/employer/EmployerApplicants";
+import CandidateSearch from "@/components/employer/CandidateSearch";
 import EmployerMessages from "@/components/employer/EmployerMessages";
+import WorkerRatings from "@/components/employer/WorkerRatings";
 import EmployerAnalytics from "@/components/employer/EmployerAnalytics";
 
 const EmployerDashboard = () => {
@@ -36,7 +38,9 @@ const EmployerDashboard = () => {
               <Route index element={<PostJob />} />
               <Route path="listings" element={<ManageListings />} />
               <Route path="applicants" element={<EmployerApplicants />} />
+              <Route path="candidates" element={<CandidateSearch />} />
               <Route path="messages" element={<EmployerMessages />} />
+              <Route path="ratings" element={<WorkerRatings />} />
               <Route path="analytics" element={<EmployerAnalytics />} />
             </Routes>
           </main>

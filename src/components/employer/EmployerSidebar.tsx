@@ -1,4 +1,4 @@
-import { PlusCircle, List, Users, MessageSquare, LogOut, BarChart3 } from "lucide-react";
+import { PlusCircle, List, Users, MessageSquare, LogOut, BarChart3, Search, Star } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +11,9 @@ const navItems = [
   { title: "Post a Job", url: "/dashboard/employer", icon: PlusCircle },
   { title: "My Listings", url: "/dashboard/employer/listings", icon: List },
   { title: "Applicants", url: "/dashboard/employer/applicants", icon: Users },
+  { title: "Find Workers", url: "/dashboard/employer/candidates", icon: Search },
   { title: "Messages", url: "/dashboard/employer/messages", icon: MessageSquare },
+  { title: "Rate Workers", url: "/dashboard/employer/ratings", icon: Star },
   { title: "Analytics", url: "/dashboard/employer/analytics", icon: BarChart3 },
 ];
 

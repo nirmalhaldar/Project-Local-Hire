@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { PlusCircle, X, MapPin, DollarSign, Briefcase } from "lucide-react";
+import { PlusCircle, X, MapPin, DollarSign, Briefcase, Sparkles, Loader2 } from "lucide-react";
 import { z } from "zod";
 
 const CATEGORIES = ["Construction", "Cleaning", "Delivery", "Gardening", "Painting", "Plumbing", "Electrical", "Moving", "Carpentry", "Other"];
@@ -34,6 +34,7 @@ const jobSchema = z.object({
   pay_min: z.number().min(0).optional(),
   pay_max: z.number().min(0).optional(),
   pay_type: z.string().optional(),
+  vacancies: z.number().min(1, "At least 1 vacancy").max(500),
 });
 
 export default function PostJob() {
@@ -46,10 +47,12 @@ export default function PostJob() {
   const [payMin, setPayMin] = useState("");
   const [payMax, setPayMax] = useState("");
   const [payType, setPayType] = useState("daily");
+  const [vacancies, setVacancies] = useState("1");
   const [skillInput, setSkillInput] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const addSkill = () => {
@@ -63,6 +66,49 @@ export default function PostJob() {
     setSelectedRoles(selectedRoles.includes(role) ? selectedRoles.filter((r) => r !== role) : [...selectedRoles, role]);
   };
 
+  const generateAIDescription = async () => {
+    if (!title && !category && selectedRoles.length === 0) {
+      toast({ title: "Fill in some details first", description: "Add a title, category, or roles so AI can generate a description.", variant: "destructive" });
+      return;
+    }
+    setGeneratingAI(true);
+    try {
+      const prompt = `Generate a professional, concise job description (max 150 words) for a blue-collar/skilled labor job with these details:
+Title: ${title || "Not specified"}
+Category: ${category || "Not specified"}
+Job Type: ${JOB_TYPES.find(t => t.value === jobType)?.label || jobType}
+Roles: ${selectedRoles.join(", ") || "Not specified"}
+Skills: ${skills.join(", ") || "Not specified"}
+Location: ${locationAddress || "Not specified"}
+Pay: ${payMin || "?"} - ${payMax || "?"} ${payType}
+Vacancies: ${vacancies}
+
+Write in a direct, professional tone. Include key responsibilities and basic requirements. Do not include the title or headers.`;
+
+      const { data, error } = await supabase.functions.invoke("ai-job-description", {
+        body: { prompt },
+      });
+
+      if (error) throw error;
+      if (data?.description) {
+        setDescription(data.description);
+        toast({ title: "Description generated!", description: "Review and edit as needed." });
+      }
+    } catch {
+      // Fallback: generate a template locally
+      const roleText = selectedRoles.length > 0 ? selectedRoles.join(", ") : category || "worker";
+      const skillText = skills.length > 0 ? `Required skills: ${skills.join(", ")}. ` : "";
+      const locText = locationAddress ? `Location: ${locationAddress}. ` : "";
+      const payText = payMin || payMax ? `Compensation: ₹${payMin || "?"} - ₹${payMax || "?"} ${payType}. ` : "";
+      
+      setDescription(
+        `We are looking for experienced ${roleText} to join our team${vacancies !== "1" ? ` (${vacancies} positions available)` : ""}. ${skillText}${locText}${payText}The ideal candidate should be reliable, punctual, and committed to quality work. Experience in ${category || "the relevant field"} is preferred. Apply now to get started!`
+      );
+      toast({ title: "Template generated", description: "AI unavailable — used a smart template instead." });
+    }
+    setGeneratingAI(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -73,6 +119,7 @@ export default function PostJob() {
       pay_min: payMin ? Number(payMin) : undefined,
       pay_max: payMax ? Number(payMax) : undefined,
       pay_type: payType,
+      vacancies: Number(vacancies) || 1,
     });
 
     if (!result.success) {
@@ -95,16 +142,16 @@ export default function PostJob() {
       pay_type: payType,
       skills_required: skills,
       roles_required: selectedRoles,
-    });
+      vacancies: Number(vacancies) || 1,
+    } as any);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Job Posted!", description: "Your job listing is now live." });
-      // Reset form
       setTitle(""); setDescription(""); setCategory(""); setJobType("gig");
       setLocationAddress(""); setPayMin(""); setPayMax(""); setPayType("daily");
-      setSkills([]); setSelectedRoles([]);
+      setSkills([]); setSelectedRoles([]); setVacancies("1");
     }
     setSubmitting(false);
   };
@@ -113,7 +160,7 @@ export default function PostJob() {
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="font-display font-bold text-2xl text-foreground">Post a New Job</h1>
-        <p className="text-muted-foreground text-sm mt-1">Fill in the details to find the right worker</p>
+        <p className="text-muted-foreground text-sm mt-1">Fill in the details to find the right worker — post in under 2 minutes</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -126,7 +173,13 @@ export default function PostJob() {
             {errors.title && <p className="text-xs text-destructive mt-1">{errors.title}</p>}
           </div>
           <div>
-            <label className="text-sm font-medium text-foreground mb-1.5 block">Description</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-medium text-foreground">Description</label>
+              <Button type="button" variant="outline" size="sm" onClick={generateAIDescription} disabled={generatingAI} className="gap-1.5">
+                {generatingAI ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                {generatingAI ? "Generating..." : "AI Generate"}
+              </Button>
+            </div>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the job, requirements, and what the worker will do..." rows={4} />
             {errors.description && <p className="text-xs text-destructive mt-1">{errors.description}</p>}
           </div>
@@ -146,6 +199,11 @@ export default function PostJob() {
                 <SelectContent>{JOB_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-foreground mb-1.5 block">Number of Vacancies</label>
+            <Input type="number" value={vacancies} onChange={(e) => setVacancies(e.target.value)} min={1} max={500} placeholder="1" className="max-w-32" />
+            {errors.vacancies && <p className="text-xs text-destructive mt-1">{errors.vacancies}</p>}
           </div>
         </Card>
 
