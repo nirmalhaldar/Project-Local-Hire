@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import JobMapView from "./JobMapView";
+import PlacesAutocomplete from "@/components/shared/PlacesAutocomplete";
 
 interface Job {
   id: string;
