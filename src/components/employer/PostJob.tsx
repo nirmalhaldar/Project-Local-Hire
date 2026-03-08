@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { PlusCircle, X, MapPin, DollarSign, Briefcase, Sparkles, Loader2 } from "lucide-react";
 import { z } from "zod";
+import PlacesAutocomplete from "@/components/shared/PlacesAutocomplete";
 
 const CATEGORIES = ["Construction", "Cleaning", "Delivery", "Gardening", "Painting", "Plumbing", "Electrical", "Moving", "Carpentry", "Other"];
 const JOB_TYPES = [
