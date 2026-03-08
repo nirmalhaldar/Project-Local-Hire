@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Search, MapPin, DollarSign, List, Map, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, Loader2, Home } from "lucide-react";
+import { Search, MapPin, DollarSign, List, Map, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, Loader2, Home, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
