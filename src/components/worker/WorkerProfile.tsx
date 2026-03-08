@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { User, Mail, Phone, Plus, X, Save, Shield, BadgeCheck, DollarSign, Briefcase } from "lucide-react";
+import { User, Mail, Phone, Plus, X, Save, Shield, BadgeCheck, DollarSign, Briefcase, MapPin } from "lucide-react";
+import PlacesAutocomplete from "@/components/shared/PlacesAutocomplete";
 
 const ALL_ROLES = ["Driver", "Electrician", "Plumber", "Carpenter", "Painter", "Cleaner", "Gardener", "Mason", "Welder", "Mechanic", "Delivery", "Cook", "Security Guard", "Other"];
 
@@ -43,6 +44,9 @@ interface Profile {
   gig_wage_daily: number | null;
   visiting_fee: number | null;
   is_verified: boolean;
+  location_address: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
 }
 
 interface Skill {
@@ -57,6 +61,7 @@ export default function WorkerProfile() {
     full_name: "", email: "", phone: "", avatar_url: null, bio: null,
     roles: [], categories: [], availability_status: "open_for_work",
     gig_wage_daily: null, visiting_fee: null, is_verified: false,
+    location_address: null, location_lat: null, location_lng: null,
   });
   const [skills, setSkills] = useState<Skill[]>([]);
   const [newSkill, setNewSkill] = useState("");
@@ -71,10 +76,10 @@ export default function WorkerProfile() {
   const fetchProfile = async () => {
     const { data } = await supabase
       .from("profiles")
-      .select("full_name, email, phone, avatar_url, bio, roles, categories, availability_status, gig_wage_daily, visiting_fee, is_verified")
+      .select("full_name, email, phone, avatar_url, bio, roles, categories, availability_status, gig_wage_daily, visiting_fee, is_verified, location_address, location_lat, location_lng")
       .eq("id", user!.id)
       .single();
-    if (data) setProfile(data as Profile);
+    if (data) setProfile(data as unknown as Profile);
     setLoading(false);
   };
 
@@ -94,7 +99,10 @@ export default function WorkerProfile() {
       availability_status: profile.availability_status,
       gig_wage_daily: profile.gig_wage_daily,
       visiting_fee: profile.visiting_fee,
-    }).eq("id", user!.id);
+      location_address: profile.location_address,
+      location_lat: profile.location_lat,
+      location_lng: profile.location_lng,
+    } as any).eq("id", user!.id);
 
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else toast({ title: "Profile updated", description: "Your profile has been saved." });
@@ -199,6 +207,19 @@ export default function WorkerProfile() {
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">Bio</label>
             <Textarea value={profile.bio || ""} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} placeholder="Tell employers about yourself..." rows={3} />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5"><MapPin size={14} /> Home Location</label>
+            <PlacesAutocomplete
+              value={profile.location_address || ""}
+              onChange={(address, lat, lng) => setProfile({ ...profile, location_address: address, location_lat: lat, location_lng: lng })}
+              placeholder="Search your area, e.g., Sector 62, Noida"
+            />
+            {profile.location_lat && profile.location_lng && (
+              <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
+                <MapPin size={10} /> {profile.location_lat.toFixed(4)}, {profile.location_lng.toFixed(4)}
+              </p>
+            )}
           </div>
         </div>
       </Card>
