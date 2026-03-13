@@ -4,9 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MapPin, IndianRupee, Clock, Users, Trash2, XCircle, Eye } from "lucide-react";
+import { MapPin, IndianRupee, Clock, Users, Trash2, XCircle, Eye, MessageCircle, Send } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface Job {
   id: string;
@@ -43,6 +45,9 @@ export default function ManageListings() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [applicants, setApplicants] = useState<Application[]>([]);
   const [loadingApplicants, setLoadingApplicants] = useState(false);
+  const [messagingWorker, setMessagingWorker] = useState<Application | null>(null);
+  const [messageText, setMessageText] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     if (user) fetchJobs();
@@ -126,6 +131,21 @@ export default function ManageListings() {
     setLoadingApplicants(false);
   };
 
+  const handleSelectWorker = async (app: Application) => {
+    const { error } = await supabase.from("job_applications").update({ status: "accepted", updated_at: new Date().toISOString() }).eq("id", app.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    
+    setApplicants(applicants.map((a) => a.id === app.id ? { ...a, status: "accepted" } : a));
+    toast({ title: "Worker selected!", description: "You can now send them a message." });
+    
+    // Open messaging dialog with default welcome message
+    setMessagingWorker(app);
+    setMessageText(`Hello ${app.worker_name || "there"}, you have been selected for the role. Can we talk more about it?`);
+  };
+
   const handleUpdateApplication = async (appId: string, status: "accepted" | "rejected") => {
     const { error } = await supabase.from("job_applications").update({ status, updated_at: new Date().toISOString() }).eq("id", appId);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -133,6 +153,26 @@ export default function ManageListings() {
       setApplicants(applicants.map((a) => a.id === appId ? { ...a, status } : a));
       toast({ title: `Application ${status}` });
     }
+  };
+
+  const handleSendMessage = async () => {
+    if (!messageText.trim() || !messagingWorker) return;
+    setSendingMessage(true);
+    
+    const { error } = await supabase.from("messages").insert({
+      sender_id: user!.id,
+      receiver_id: messagingWorker.worker_id,
+      content: messageText.trim(),
+    });
+    
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Message sent!", description: "Your message has been sent to the worker." });
+      setMessagingWorker(null);
+      setMessageText("");
+    }
+    setSendingMessage(false);
   };
 
   const formatPay = (job: Job) => {
@@ -279,14 +319,40 @@ export default function ManageListings() {
 
                   {app.status === "pending" && (
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={() => handleUpdateApplication(app.id, "accepted")}>Accept</Button>
+                      <Button size="sm" onClick={() => handleSelectWorker(app)}>Accept</Button>
                       <Button size="sm" variant="outline" onClick={() => handleUpdateApplication(app.id, "rejected")}>Reject</Button>
                     </div>
+                  )}
+                  {app.status === "accepted" && (
+                    <Button size="sm" variant="outline" onClick={() => { setMessagingWorker(app); setMessageText(""); }}>
+                      <MessageCircle size={14} className="mr-1.5" /> Message
+                    </Button>
                   )}
                 </Card>
               ))}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Message Worker Dialog */}
+      <Dialog open={!!messagingWorker} onOpenChange={(open) => !open && setMessagingWorker(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Message {messagingWorker?.worker_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              placeholder="Type your message..."
+              rows={4}
+            />
+            <Button onClick={handleSendMessage} disabled={sendingMessage || !messageText.trim()} className="w-full">
+              <Send size={16} className="mr-2" />
+              {sendingMessage ? "Sending..." : "Send Message"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

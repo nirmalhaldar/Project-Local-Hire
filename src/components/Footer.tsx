@@ -5,9 +5,11 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-display font-bold">L</span>
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="LocalHire" 
+                className="w-8 h-8 rounded-lg object-contain"
+              />
               <span className="font-display font-bold text-lg">
                 Local<span className="text-primary">Hire</span>
               </span>

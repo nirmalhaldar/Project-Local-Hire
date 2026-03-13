@@ -4,8 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Users, MessageCircle, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ApplicationWithJob {
   id: string;
@@ -27,13 +29,15 @@ export default function EmployerApplicants() {
   const [applications, setApplications] = useState<ApplicationWithJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "accepted" | "rejected">("all");
+  const [messagingWorker, setMessagingWorker] = useState<ApplicationWithJob | null>(null);
+  const [messageText, setMessageText] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     if (user) fetchApplications();
   }, [user]);
 
   const fetchApplications = async () => {
-    // Get employer's jobs
     const { data: jobs } = await supabase.from("jobs").select("id, title, category").eq("employer_id", user!.id);
     if (!jobs || jobs.length === 0) { setLoading(false); return; }
 
@@ -78,6 +82,20 @@ export default function EmployerApplicants() {
     setLoading(false);
   };
 
+  const handleSelectWorker = async (app: ApplicationWithJob) => {
+    const { error } = await supabase.from("job_applications").update({ status: "accepted", updated_at: new Date().toISOString() }).eq("id", app.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    
+    setApplications(applications.map((a) => a.id === app.id ? { ...a, status: "accepted" } : a));
+    toast({ title: "Worker selected!", description: "You can now send them a message." });
+    
+    setMessagingWorker(app);
+    setMessageText(`Hello ${app.worker_name || "there"}, you have been selected for the role. Can we talk more about it?`);
+  };
+
   const handleUpdate = async (appId: string, status: "accepted" | "rejected") => {
     const { error } = await supabase.from("job_applications").update({ status, updated_at: new Date().toISOString() }).eq("id", appId);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -85,6 +103,26 @@ export default function EmployerApplicants() {
       setApplications(applications.map((a) => a.id === appId ? { ...a, status } : a));
       toast({ title: `Application ${status}` });
     }
+  };
+
+  const handleSendMessage = async () => {
+    if (!messageText.trim() || !messagingWorker) return;
+    setSendingMessage(true);
+    
+    const { error } = await supabase.from("messages").insert({
+      sender_id: user!.id,
+      receiver_id: messagingWorker.worker_id,
+      content: messageText.trim(),
+    });
+    
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Message sent!", description: "Your message has been sent to the worker." });
+      setMessagingWorker(null);
+      setMessageText("");
+    }
+    setSendingMessage(false);
   };
 
   const filtered = filter === "all" ? applications : applications.filter((a) => a.status === filter);
@@ -115,7 +153,6 @@ export default function EmployerApplicants() {
         <p className="text-muted-foreground text-sm mt-1">Review and manage applications across all your jobs</p>
       </div>
 
-      {/* Filter tabs */}
       <div className="flex gap-2">
         {(["all", "pending", "accepted", "rejected"] as const).map((f) => (
           <Button key={f} size="sm" variant={filter === f ? "default" : "outline"} onClick={() => setFilter(f)} className="capitalize">
@@ -166,14 +203,39 @@ export default function EmployerApplicants() {
 
               {app.status === "pending" && (
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={() => handleUpdate(app.id, "accepted")}>Accept</Button>
+                  <Button size="sm" onClick={() => handleSelectWorker(app)}>Accept</Button>
                   <Button size="sm" variant="outline" onClick={() => handleUpdate(app.id, "rejected")}>Reject</Button>
                 </div>
+              )}
+              {app.status === "accepted" && (
+                <Button size="sm" variant="outline" onClick={() => { setMessagingWorker(app); setMessageText(""); }}>
+                  <MessageCircle size={14} className="mr-1.5" /> Message
+                </Button>
               )}
             </Card>
           ))}
         </div>
       )}
+
+      <Dialog open={!!messagingWorker} onOpenChange={(open) => !open && setMessagingWorker(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Message {messagingWorker?.worker_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              placeholder="Type your message..."
+              rows={4}
+            />
+            <Button onClick={handleSendMessage} disabled={sendingMessage || !messageText.trim()} className="w-full">
+              <Send size={16} className="mr-2" />
+              {sendingMessage ? "Sending..." : "Send Message"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

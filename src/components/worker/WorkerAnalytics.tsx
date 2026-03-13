@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
-import { Briefcase, Bookmark, CheckCircle, XCircle, Clock, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Briefcase, Bookmark, CheckCircle, XCircle, Clock, TrendingUp, MessageCircle, Send } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Stats {
   applied: number;
@@ -17,6 +21,9 @@ export default function WorkerAnalytics() {
   const [stats, setStats] = useState<Stats>({ applied: 0, saved: 0, accepted: 0, rejected: 0, pending: 0 });
   const [recentApplications, setRecentApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [messagingJob, setMessagingJob] = useState<any>(null);
+  const [messageText, setMessageText] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     if (user) fetchStats();
@@ -42,12 +49,42 @@ export default function WorkerAnalytics() {
     // Fetch job details for recent applications
     if (apps.length > 0) {
       const jobIds = apps.slice(0, 10).map((a) => a.job_id);
-      const { data: jobsData } = await supabase.from("jobs").select("id, title, category").in("id", jobIds);
+      const { data: jobsData } = await supabase.from("jobs").select("id, title, category, employer_id").in("id", jobIds);
       const jobMap = new Map((jobsData || []).map((j) => [j.id, j]));
-      setRecentApplications(apps.slice(0, 10).map((a) => ({ ...a, job: jobMap.get(a.job_id) })));
+      
+      // Get employer names
+      const employerIds = [...new Set((jobsData || []).map((j) => j.employer_id))];
+      const { data: employerProfiles } = await supabase.from("profiles").select("id, company_name, full_name").in("id", employerIds);
+      const employerMap = new Map((employerProfiles || []).map((p) => [p.id, p.company_name || p.full_name || "Employer"]));
+      
+      setRecentApplications(apps.slice(0, 10).map((a) => ({ 
+        ...a, 
+        job: jobMap.get(a.job_id),
+        employer_name: employerMap.get(jobMap.get(a.job_id)?.employer_id) || "Employer"
+      })));
     }
 
     setLoading(false);
+  };
+
+  const handleSendMessage = async () => {
+    if (!messageText.trim() || !messagingJob) return;
+    setSendingMessage(true);
+    
+    const { error } = await supabase.from("messages").insert({
+      sender_id: user!.id,
+      receiver_id: messagingJob.job.employer_id,
+      content: messageText.trim(),
+    });
+    
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Message sent!", description: "Your message has been sent to the employer." });
+      setMessagingJob(null);
+      setMessageText("");
+    }
+    setSendingMessage(false);
   };
 
   const statCards = [
@@ -114,12 +151,40 @@ export default function WorkerAnalytics() {
                   <p className="font-medium text-foreground text-sm">{app.job?.title || "Unknown Job"}</p>
                   <p className="text-xs text-muted-foreground">{app.job?.category} · {new Date(app.created_at).toLocaleDateString()}</p>
                 </div>
-                {statusBadge(app.status)}
+                <div className="flex items-center gap-2">
+                  {statusBadge(app.status)}
+                  {app.status === "accepted" && (
+                    <Button size="sm" variant="outline" onClick={() => { setMessagingJob(app); setMessageText(""); }}>
+                      <MessageCircle size={14} className="mr-1.5" /> Message
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         )}
       </Card>
+
+      {/* Message Employer Dialog */}
+      <Dialog open={!!messagingJob} onOpenChange={(open) => !open && setMessagingJob(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Message {messagingJob?.employer_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              placeholder="Type your message..."
+              rows={4}
+            />
+            <Button onClick={handleSendMessage} disabled={sendingMessage || !messageText.trim()} className="w-full">
+              <Send size={16} className="mr-2" />
+              {sendingMessage ? "Sending..." : "Send Message"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import CandidateSearch from "@/components/employer/CandidateSearch";
 import EmployerMessages from "@/components/employer/EmployerMessages";
 import WorkerRatings from "@/components/employer/WorkerRatings";
 import EmployerAnalytics from "@/components/employer/EmployerAnalytics";
+import EmployerProfile from "@/components/employer/EmployerProfile";
 
 const EmployerDashboard = () => {
   const { user, loading, userRole } = useAuth();
@@ -36,6 +37,7 @@ const EmployerDashboard = () => {
           <main className="flex-1 p-6 overflow-auto">
             <Routes>
               <Route index element={<PostJob />} />
+              <Route path="profile" element={<EmployerProfile />} />
               <Route path="listings" element={<ManageListings />} />
               <Route path="applicants" element={<EmployerApplicants />} />
               <Route path="candidates" element={<CandidateSearch />} />

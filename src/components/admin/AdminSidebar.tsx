@@ -27,9 +27,11 @@ export function AdminSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <div className="p-4 flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-destructive flex items-center justify-center shrink-0">
-            <span className="text-destructive-foreground font-bold text-lg">A</span>
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="LocalHire" 
+            className="w-9 h-9 rounded-lg object-contain shrink-0"
+          />
           {!collapsed && <span className="font-bold text-lg text-foreground">Admin<span className="text-destructive">Panel</span></span>}
         </div>
         <SidebarGroup>

@@ -25,7 +25,6 @@ interface Job {
   skills_required: string[];
   roles_required: string[];
   created_at: string;
-  employer_id: string;
 }
 
 const CATEGORIES = [

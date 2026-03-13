@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Search, MapPin, IndianRupee, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, X } from "lucide-react";
+import { Search, MapPin, IndianRupee, Clock, Briefcase, Send, Bookmark, BookmarkCheck, Flag, ChevronDown, Sparkles, TrendingUp, Navigation, X, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,7 +47,7 @@ export default function JobSearch() {
   const [salaryRange, setSalaryRange] = useState([0, 50000]);
   
   const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
-  const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  const [appliedJobStatuses, setAppliedJobStatuses] = useState<Map<string, string>>(new Map());
   const [showFilters, setShowFilters] = useState(false);
   const [reportJobId, setReportJobId] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState("");
@@ -97,8 +97,14 @@ export default function JobSearch() {
   };
 
   const fetchAppliedJobs = async () => {
-    const { data } = await supabase.from("job_applications").select("job_id").eq("worker_id", user!.id);
-    if (data) setAppliedJobIds(new Set(data.map((d) => d.job_id)));
+    const { data } = await supabase.from("job_applications").select("job_id, status").eq("worker_id", user!.id);
+    if (data) {
+      const statusMap = new Map<string, string>();
+      data.forEach((d) => {
+        statusMap.set(d.job_id, d.status || "pending");
+      });
+      setAppliedJobStatuses(statusMap);
+    }
   };
 
   const fetchHomeLocation = async () => {
@@ -140,7 +146,9 @@ export default function JobSearch() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      setAppliedJobIds(new Set([...appliedJobIds, jobId]));
+      const newStatusMap = new Map(appliedJobStatuses);
+      newStatusMap.set(jobId, "pending");
+      setAppliedJobStatuses(newStatusMap);
       toast({ title: "Applied!", description: "Your application has been sent." });
     }
   };
@@ -345,7 +353,11 @@ export default function JobSearch() {
                   <button onClick={() => handleToggleSave(job.id)} className="p-1.5 hover:bg-muted rounded-md transition">
                     {savedJobIds.has(job.id) ? <BookmarkCheck size={16} className="text-primary" /> : <Bookmark size={16} className="text-muted-foreground" />}
                   </button>
-                  <button onClick={() => setReportJobId(job.id)} className="p-1.5 hover:bg-muted rounded-md transition">
+                  <button 
+                    onClick={() => setReportJobId(job.id)} 
+                    className="p-1.5 hover:bg-muted rounded-md transition"
+                    aria-label="Report this job"
+                  >
                     <Flag size={14} className="text-muted-foreground" />
                   </button>
                 </div>
@@ -370,9 +382,21 @@ export default function JobSearch() {
                 </div>
               )}
 
-              {appliedJobIds.has(job.id) ? (
-                <div className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
-                  <Send size={14} /> Applied
+              {appliedJobStatuses.has(job.id) ? (
+                <div className={`flex items-center gap-1.5 text-sm font-medium ${
+                  appliedJobStatuses.get(job.id) === "selected" || appliedJobStatuses.get(job.id) === "accepted"
+                    ? "text-green-600"
+                    : appliedJobStatuses.get(job.id) === "rejected"
+                    ? "text-red-600"
+                    : "text-blue-600"
+                }`}>
+                  {appliedJobStatuses.get(job.id) === "selected" || appliedJobStatuses.get(job.id) === "accepted" ? (
+                    <><CheckCircle size={14} /> Selected</>
+                  ) : appliedJobStatuses.get(job.id) === "rejected" ? (
+                    <><XCircle size={14} /> Rejected</>
+                  ) : (
+                    <><Send size={14} /> Applied</>
+                  )}
                 </div>
               ) : (
                 <Button size="sm" onClick={() => handleApply(job.id)} className="gap-1.5">
